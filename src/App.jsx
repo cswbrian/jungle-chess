@@ -14,6 +14,7 @@ const HostClient = Client({
   multiplayer: P2P({ isHost: true }),
   numPlayers: 2,
   loading: Loading,
+  debug: { collapseOnLoad: true },
 })
 
 const PeerClient = Client({
@@ -22,6 +23,7 @@ const PeerClient = Client({
   multiplayer: P2P(),
   numPlayers: 2,
   loading: Loading,
+  debug: { collapseOnLoad: true },
 })
 
 function generateMatchID() {
