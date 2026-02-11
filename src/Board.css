@@ -119,12 +119,33 @@
   position: absolute;
   width: clamp(10px, 2.5vw, 14px);
   height: clamp(10px, 2.5vw, 14px);
-  background: rgba(0, 128, 0, 0.5);
   border-radius: 50%;
 }
 
-.cell.legal:hover,
-.cell.legal:active {
+.cell.legal.legal-p0::after {
+  background: rgba(211, 47, 47, 0.55);
+}
+
+.cell.legal.legal-p1::after {
+  background: rgba(46, 125, 50, 0.55);
+}
+
+.cell.legal:not(.legal-p0):not(.legal-p1)::after {
+  background: rgba(0, 128, 0, 0.5);
+}
+
+.cell.legal.legal-p0:hover,
+.cell.legal.legal-p0:active {
+  background: #ffcdd2;
+}
+
+.cell.legal.legal-p1:hover,
+.cell.legal.legal-p1:active {
+  background: #c8e6c9;
+}
+
+.cell.legal:not(.legal-p0):not(.legal-p1):hover,
+.cell.legal:not(.legal-p0):not(.legal-p1):active {
   background: #d4e157;
 }
 

@@ -3,7 +3,7 @@ import { getLegalMoves } from './Game'
 import { isRiver, isTrap, isDen, PIECE_NAMES, PIECE_EMOJIS, ROWS, COLS, DEN_0, DEN_1 } from './constants'
 import './Board.css'
 
-function Cell({ r, c, cell, isSelected, isLegalMove, onClick }) {
+function Cell({ r, c, cell, isSelected, isLegalMove, legalMovePlayer, onClick }) {
   const river = isRiver(r, c)
   const trap0 = isTrap(r, c, '0')
   const trap1 = isTrap(r, c, '1')
@@ -15,7 +15,10 @@ function Cell({ r, c, cell, isSelected, isLegalMove, onClick }) {
   if (trap0 || trap1) className += ' trap'
   if (den0 || den1) className += ' den'
   if (isSelected) className += ' selected'
-  if (isLegalMove) className += ' legal'
+  if (isLegalMove) {
+    className += ' legal'
+    if (legalMovePlayer !== undefined) className += ` legal-p${legalMovePlayer}`
+  }
 
   const label = cell
     ? `${PIECE_NAMES[cell.piece] || ''} (${cell.player})`
@@ -102,6 +105,7 @@ export function Board({ G, ctx, moves, playerID }) {
               cell={G.cells[actualRow][c]}
               isSelected={selected?.[0] === actualRow && selected?.[1] === c}
               isLegalMove={legalMoves.some(([nr, nc]) => nr === actualRow && nc === c)}
+              legalMovePlayer={selected ? currentPlayer : undefined}
               onClick={() => handleCellClick(actualRow, c)}
             />
           ))

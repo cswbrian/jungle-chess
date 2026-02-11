@@ -67,19 +67,19 @@ function generateMatchID() {
 }
 
 const RULES_CONTENT = [
-  { title: '基本移動與吃子', text: '每回合可前後左右移動一格。較大動物可吃較小動物，同類相遇可互吃。' },
-  { title: '動物階級', text: '🐘象 > 🦁獅 > 🐯虎 > 🐆豹 > 🐺狼 > 🐕狗 > 🐱貓 > 🐀鼠。' },
-  { title: '特殊吃法（鼠吃象）', text: '老鼠可以吃掉大象，大象不能吃老鼠（或象不能吃河中的鼠）。' },
-  { title: '過河規則', text: '獅、虎：可以縱向或橫向跳過河流，並可吃掉對岸較小動物。但若河中有鼠（不論敵我），獅虎不能跳河。鼠：唯一可以下水（進入河中）的動物。在水中時，陸地上的動物無法吃鼠，鼠也不能吃陸地上的大象。' },
-  { title: '陷阱', text: '每個獸穴旁有三個陷阱。敵方動物走入我方陷阱，我方任一動物皆可將其吃掉（此時陷阱中動物視為無戰鬥力）。' },
-  { title: '獸穴', text: '進入敵方獸穴即獲勝。任何棋子不可進入自己的獸穴。' },
+  { title: '移動與吃子', text: '前後左右一格。大吃小，同級互吃。' },
+  { title: '階級', text: '🐘象 > 🦁獅 > 🐯虎 > 🐆豹 > 🐺狼 > 🐕狗 > 🐱貓 > 🐀鼠' },
+  { title: '鼠吃象', text: '🐀鼠可吃🐘象，🐘象不能吃🐀鼠。' },
+  { title: '河', text: '🦁獅🐯虎可跳河。河有🐀鼠則不能跳。🐀鼠可下水，水中無敵。' },
+  { title: '陷阱', text: '敵入我方陷阱，任我方可吃。' },
+  { title: '獸穴', text: '佔領敵方獸穴即勝。' },
 ]
 
 function RulesModal({ open, onClose }) {
   if (!open) return null
   return (
-    <div className="rules-overlay" onClick={onClose} role="dialog" aria-label="遊戲規則">
-      <div className="rules-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="rules-overlay" role="dialog" aria-label="遊戲規則">
+      <div className="rules-modal">
         <div className="rules-header">
           <h2>遊戲規則</h2>
           <button type="button" className="rules-close" onClick={onClose} aria-label="關閉">
