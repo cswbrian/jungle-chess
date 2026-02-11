@@ -19,7 +19,7 @@ function Cell({ r, c, cell, isSelected, isLegalMove, onClick }) {
 
   const label = cell
     ? `${PIECE_NAMES[cell.piece] || ''} (${cell.player})`
-    : den0 ? 'Den 0' : den1 ? 'Den 1' : ''
+    : den0 ? '紅方獸穴' : den1 ? '綠方獸穴' : ''
 
   return (
     <button
@@ -29,6 +29,8 @@ function Cell({ r, c, cell, isSelected, isLegalMove, onClick }) {
       title={label}
       disabled={!onClick}
     >
+      {(den0 || den1) && <span className="cell-label cell-label-den">獸穴</span>}
+      {(trap0 || trap1) && !den0 && !den1 && <span className="cell-label cell-label-trap">陷阱</span>}
       {cell && (
         <span className={`piece p${cell.player}`}>
           {PIECE_NAMES[cell.piece] ?? cell.piece}
@@ -65,25 +67,22 @@ export function Board({ G, ctx, moves, playerID }) {
     }
   }
 
-  if (!G?.cells) return <div className="board-wrap">Loading…</div>
+  if (!G?.cells) return <div className="board-wrap">載入中…</div>
 
-  const myColor = playerID === '0' ? 'Red' : 'Green'
-  const myClass = playerID === '0' ? 'text-p0' : 'text-p1'
-  const turnColor = currentPlayer === '0' ? 'Red' : 'Green'
   const turnClass = currentPlayer === '0' ? 'text-p0' : 'text-p1'
+
+  // Red (0) sees their pieces at top—flip so own pieces are at bottom
+  const toActualRow = (displayRow) => (playerID === '0' ? ROWS - 1 - displayRow : displayRow)
 
   return (
     <div className="board-wrap">
-      <div className={`player-indicator ${myClass}`}>
-        You are {myColor}
-      </div>
       {gameover && (
         <div className="gameover">
-          Winner: {gameover.winner === playerID ? 'You' : 'Opponent'}
+          獲勝：{gameover.winner === playerID ? '你' : '對手'}
         </div>
       )}
-      <p className={`turn-info ${turnClass}`}>
-        {gameover ? 'Game over' : isMyTurn ? `Your Turn (${turnColor})` : `Opponent's Turn (${turnColor})`}
+      <p className={`board-status ${turnClass}`}>
+        {gameover ? '遊戲結束' : isMyTurn ? '你的回合' : '對手回合'}
       </p>
       <div
         className="board"
@@ -92,19 +91,20 @@ export function Board({ G, ctx, moves, playerID }) {
           gridTemplateColumns: `repeat(${COLS}, 1fr)`,
         }}
       >
-        {Array.from({ length: ROWS }, (_, r) =>
-          Array.from({ length: COLS }, (_, c) => (
+        {Array.from({ length: ROWS }, (_, displayRow) => {
+          const actualRow = toActualRow(displayRow)
+          return Array.from({ length: COLS }, (_, c) => (
             <Cell
-              key={`${r}-${c}`}
-              r={r}
+              key={`${actualRow}-${c}`}
+              r={actualRow}
               c={c}
-              cell={G.cells[r][c]}
-              isSelected={selected?.[0] === r && selected?.[1] === c}
-              isLegalMove={legalMoves.some(([nr, nc]) => nr === r && nc === c)}
-              onClick={() => handleCellClick(r, c)}
+              cell={G.cells[actualRow][c]}
+              isSelected={selected?.[0] === actualRow && selected?.[1] === c}
+              isLegalMove={legalMoves.some(([nr, nc]) => nr === actualRow && nc === c)}
+              onClick={() => handleCellClick(actualRow, c)}
             />
           ))
-        )}
+        })}
       </div>
     </div>
   )
