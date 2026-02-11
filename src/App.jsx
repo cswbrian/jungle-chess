@@ -228,7 +228,6 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
             </button>
           )}
         </div>
-        {isHost && <span className="waiting">等候對手</span>}
       </header>
       <ClientComponent matchID={matchID} playerID={playerID} />
     </div>

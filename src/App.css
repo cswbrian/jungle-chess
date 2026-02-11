@@ -409,13 +409,6 @@ body {
   background: rgba(255,255,255,0.35);
 }
 
-.game-header .waiting {
-  font-size: 0.85rem;
-  opacity: 0.95;
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
 .loading {
   padding: 2rem 1rem;
   padding-bottom: max(2rem, env(safe-area-inset-bottom));
