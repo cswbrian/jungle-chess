@@ -18,6 +18,15 @@
   font-size: clamp(0.95rem, 2.5vw, 1.1rem);
 }
 
+.disconnect-banner {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #b45309;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
 .gameover {
   margin-bottom: 0.75rem;
   padding: 0.75rem 1rem;
@@ -149,10 +158,13 @@
   background: #d4e157;
 }
 
-/* Piece: circle with emoji + char */
+/* Piece: perfect circle (content cannot stretch it) */
 .piece {
+  position: relative;
   width: 96%;
   aspect-ratio: 1;
+  min-height: 0;
+  flex-shrink: 0;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -166,18 +178,19 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   border: 2px solid rgba(255,255,255,0.3);
   z-index: 2;
-  flex-shrink: 0;
 }
 
 .piece-emoji {
   font-size: clamp(24px, 5.8vw, 40px);
   line-height: 1;
+  flex-shrink: 1;
 }
 
 .piece-char {
   font-size: clamp(13px, 3.2vw, 22px);
   line-height: 1.1;
   text-shadow: 0 0.5px 1px rgba(0,0,0,0.3);
+  flex-shrink: 1;
 }
 
 /* Player 0: Red */
