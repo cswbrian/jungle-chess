@@ -26,6 +26,18 @@ export const PIECE_NAMES = {
   8: '象',   // Elephant, xiàng
 }
 
+// Emoji for each piece
+export const PIECE_EMOJIS = {
+  1: '🐀',   // Rat
+  2: '🐱',   // Cat
+  3: '🐕',   // Dog
+  4: '🐺',   // Wolf
+  5: '🐆',   // Leopard
+  6: '🐯',   // Tiger
+  7: '🦁',   // Lion
+  8: '🐘',   // Elephant
+}
+
 // Den at center of each back row
 export const DEN_0 = { r: 0, c: 3 }
 export const DEN_1 = { r: 8, c: 3 }

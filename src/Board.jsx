@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { getLegalMoves } from './Game'
-import { isRiver, isTrap, isDen, PIECE_NAMES, ROWS, COLS, DEN_0, DEN_1 } from './constants'
+import { isRiver, isTrap, isDen, PIECE_NAMES, PIECE_EMOJIS, ROWS, COLS, DEN_0, DEN_1 } from './constants'
 import './Board.css'
 
 function Cell({ r, c, cell, isSelected, isLegalMove, onClick }) {
@@ -33,7 +33,8 @@ function Cell({ r, c, cell, isSelected, isLegalMove, onClick }) {
       {(trap0 || trap1) && !den0 && !den1 && <span className="cell-label cell-label-trap">陷阱</span>}
       {cell && (
         <span className={`piece p${cell.player}`}>
-          {PIECE_NAMES[cell.piece] ?? cell.piece}
+          <span className="piece-emoji">{PIECE_EMOJIS[cell.piece] ?? ''}</span>
+          <span className="piece-char">{PIECE_NAMES[cell.piece] ?? cell.piece}</span>
         </span>
       )}
     </button>

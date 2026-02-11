@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Client } from 'boardgame.io/react'
 import { P2P } from '@boardgame.io/p2p'
 import { JungleGame } from './Game'
@@ -68,7 +68,7 @@ function generateMatchID() {
 
 const RULES_CONTENT = [
   { title: '基本移動與吃子', text: '每回合可前後左右移動一格。較大動物可吃較小動物，同類相遇可互吃。' },
-  { title: '動物階級', text: '象 > 獅 > 虎 > 豹 > 狼 > 狗 > 貓 > 鼠。' },
+  { title: '動物階級', text: '🐘象 > 🦁獅 > 🐯虎 > 🐆豹 > 🐺狼 > 🐕狗 > 🐱貓 > 🐀鼠。' },
   { title: '特殊吃法（鼠吃象）', text: '老鼠可以吃掉大象，大象不能吃老鼠（或象不能吃河中的鼠）。' },
   { title: '過河規則', text: '獅、虎：可以縱向或橫向跳過河流，並可吃掉對岸較小動物。但若河中有鼠（不論敵我），獅虎不能跳河。鼠：唯一可以下水（進入河中）的動物。在水中時，陸地上的動物無法吃鼠，鼠也不能吃陸地上的大象。' },
   { title: '陷阱', text: '每個獸穴旁有三個陷阱。敵方動物走入我方陷阱，我方任一動物皆可將其吃掉（此時陷阱中動物視為無戰鬥力）。' },
@@ -107,9 +107,27 @@ function RulesButton({ onClick }) {
   )
 }
 
+function parseCodeInput(input) {
+  const trimmed = input.trim().toLowerCase()
+  const codeMatch = trimmed.match(/[?&]code=([a-z0-9]+)/)
+  if (codeMatch) return codeMatch[1].slice(0, 8)
+  try {
+    const url = new URL(trimmed)
+    const code = url.searchParams.get('code') || ''
+    return code.slice(0, 8)
+  } catch {
+    return trimmed.slice(0, 8)
+  }
+}
+
 function Lobby({ onCreate, onJoin }) {
   const [matchID, setMatchID] = useState('')
   const [rulesOpen, setRulesOpen] = useState(false)
+
+  const handleJoin = () => {
+    const code = parseCodeInput(matchID)
+    if (code) onJoin(code)
+  }
 
   return (
     <div className="lobby">
@@ -138,18 +156,18 @@ function Lobby({ onCreate, onJoin }) {
         <div className="action-card action-card-join">
           <span className="action-icon" aria-hidden>◆</span>
           <h2>加入對局</h2>
-          <p className="action-desc">輸入好友分享的 6 位代碼</p>
+          <p className="action-desc">輸入代碼或貼上分享連結</p>
           <input
             type="text"
-            placeholder="輸入代碼"
+            placeholder="輸入代碼或貼上連結"
             value={matchID}
-            onChange={(e) => setMatchID(e.target.value.trim().toLowerCase().slice(0, 8))}
-            maxLength={8}
+            onChange={(e) => setMatchID(e.target.value)}
+            maxLength={200}
           />
           <button
             type="button"
-            onClick={() => matchID && onJoin(matchID)}
-            disabled={!matchID}
+            onClick={handleJoin}
+            disabled={!parseCodeInput(matchID)}
           >
             加入遊戲
           </button>
@@ -160,10 +178,36 @@ function Lobby({ onCreate, onJoin }) {
   )
 }
 
+function getShareUrl(code) {
+  return window.location.origin + (import.meta.env.BASE_URL || '/') + '?code=' + encodeURIComponent(code)
+}
+
 function GameScreen({ matchID, playerID, isHost, onBack }) {
   const ClientComponent = isHost ? HostClient : PeerClient
   const displayMatchID = matchID.replace(`${APP_ID}-`, '')
   const [rulesOpen, setRulesOpen] = useState(false)
+
+  const shareUrl = getShareUrl(displayMatchID)
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: '鬥獸棋',
+          text: `加入我的鬥獸棋對局，代碼：${displayMatchID}`,
+          url: shareUrl,
+        })
+        return
+      } catch (e) {
+        if (e.name === 'AbortError') return
+      }
+    }
+    navigator.clipboard?.writeText(shareUrl)
+  }
+
+  const handleCopyCode = () => {
+    navigator.clipboard?.writeText(displayMatchID)
+  }
 
   return (
     <div className="game-screen">
@@ -174,27 +218,38 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
         </button>
         <RulesButton onClick={() => setRulesOpen(true)} />
         <div className="match-info">
-          <span>代碼：</span>
           <code>{displayMatchID}</code>
-          <button
-            type="button"
-            className="copy"
-            onClick={() => navigator.clipboard?.writeText(displayMatchID)}
-          >
+          <button type="button" className="copy" onClick={handleCopyCode}>
             複製
           </button>
+          {isHost && (
+            <button type="button" className="share-link" onClick={handleShare}>
+              分享
+            </button>
+          )}
         </div>
-        {isHost && (
-          <span className="waiting">分享代碼，等待對手…</span>
-        )}
+        {isHost && <span className="waiting">等候對手</span>}
       </header>
       <ClientComponent matchID={matchID} playerID={playerID} />
     </div>
   )
 }
 
+function getJoinCodeFromUrl() {
+  const params = new URLSearchParams(window.location.search)
+  return params.get('code') || params.get('join') || ''
+}
+
 export default function App() {
   const [game, setGame] = useState(null)
+
+  useEffect(() => {
+    const code = getJoinCodeFromUrl().trim().toLowerCase().slice(0, 8)
+    if (code) {
+      setGame({ matchID: `${APP_ID}-${code}`, playerID: '1', isHost: false })
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [])
 
   if (game) {
     return (
