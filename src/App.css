@@ -1,12 +1,34 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+/* Mobile-first: Lobby */
 .lobby {
   max-width: 480px;
-  margin: 2rem auto;
-  padding: 1rem;
+  margin: 0 auto;
+  padding: clamp(1rem, 5vw, 2rem);
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
   text-align: center;
 }
 
 .lobby h1 {
-  font-size: 1.75rem;
+  font-size: clamp(1.5rem, 5vw, 1.75rem);
   margin: 0 0 0.25rem 0;
 }
 
@@ -19,13 +41,13 @@
 .lobby-actions {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .action-card {
   background: #f5f5f5;
-  border-radius: 10px;
-  padding: 1.25rem;
+  border-radius: 12px;
+  padding: clamp(1rem, 4vw, 1.5rem);
   text-align: center;
   border: 1px solid #e0e0e0;
 }
@@ -38,28 +60,31 @@
 .action-card input {
   display: block;
   width: 100%;
-  max-width: 200px;
+  max-width: 220px;
   margin: 0 auto 0.5rem;
-  padding: 0.5rem;
-  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 16px; /* Prevents iOS zoom on focus */
   text-align: center;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
   text-transform: lowercase;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .action-card button {
-  padding: 0.5rem 1rem;
+  min-height: 48px;
+  padding: 0.75rem 1.5rem;
   font-size: 1rem;
   background: #2d5016;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
-.action-card button:hover:not(:disabled) {
+.action-card button:hover:not(:disabled),
+.action-card button:active:not(:disabled) {
   background: #3d6b20;
 }
 
@@ -69,7 +94,7 @@
 }
 
 .game-screen {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -77,8 +102,11 @@
 .game-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.5rem 1rem;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
   background: #2d5016;
   color: #fff;
   flex-wrap: wrap;
@@ -88,41 +116,48 @@
   background: transparent;
   border: 1px solid rgba(255,255,255,0.5);
   color: #fff;
-  padding: 0.35rem 0.6rem;
-  border-radius: 4px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  touch-action: manipulation;
 }
 
-.game-header .back:hover {
+.game-header .back:hover,
+.game-header .back:active {
   background: rgba(255,255,255,0.15);
 }
 
 .match-info {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
 }
 
 .match-info code {
   font-size: 1.1rem;
   letter-spacing: 0.15em;
-  padding: 0.2rem 0.4rem;
+  padding: 0.35rem 0.5rem;
   background: rgba(0,0,0,0.2);
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .game-header .copy {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.85rem;
+  min-height: 36px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
   background: rgba(255,255,255,0.2);
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   color: #fff;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
-.game-header .copy:hover {
+.game-header .copy:hover,
+.game-header .copy:active {
   background: rgba(255,255,255,0.3);
 }
 
@@ -130,10 +165,19 @@
   font-size: 0.9rem;
   opacity: 0.9;
   margin-left: auto;
+  flex-basis: 100%;
+}
+
+@media (min-width: 400px) {
+  .game-header .waiting {
+    flex-basis: auto;
+    margin-left: auto;
+  }
 }
 
 .loading {
-  padding: 2rem;
+  padding: 2rem 1rem;
+  padding-bottom: max(2rem, env(safe-area-inset-bottom));
   text-align: center;
   font-size: 1.1rem;
   color: #666;
