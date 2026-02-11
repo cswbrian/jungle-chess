@@ -3,6 +3,7 @@ import { Client } from 'boardgame.io/react'
 import { P2P } from '@boardgame.io/p2p'
 import { JungleGame } from './Game'
 import { Board } from './Board'
+import { PIECE_EMOJIS } from './constants'
 
 const APP_ID = 'jungle-chess-v1'
 
@@ -132,7 +133,7 @@ function Lobby({ onCreate, onJoin }) {
   return (
     <div className="lobby">
       <div className="lobby-hero">
-        <span className="lobby-badge">象獅虎豹狼狗貓鼠</span>
+        <span className="lobby-badge">{[8,7,6,5,4,3,2,1].map(r => PIECE_EMOJIS[r]).join('')}</span>
         <h1 className="lobby-title">鬥獸棋</h1>
         <p className="lobby-subtitle">Jungle Chess</p>
         <button
@@ -147,16 +148,17 @@ function Lobby({ onCreate, onJoin }) {
       <div className="lobby-actions">
         <div className="action-card action-card-create">
           <span className="action-icon" aria-hidden>✦</span>
-          <h2>建立對局</h2>
-          <p className="action-desc">創建房間，分享代碼給好友</p>
+          <h2>開新局</h2>
+          <p className="action-desc">開房後將代碼分享畀朋友</p>
           <button type="button" onClick={() => onCreate(generateMatchID())}>
-            建立遊戲
+            開局
           </button>
         </div>
+        <span className="lobby-or">或</span>
         <div className="action-card action-card-join">
           <span className="action-icon" aria-hidden>◆</span>
-          <h2>加入對局</h2>
-          <p className="action-desc">輸入代碼或貼上分享連結</p>
+          <h2>加入棋局</h2>
+          <p className="action-desc">輸入代碼或貼上連結</p>
           <input
             type="text"
             placeholder="輸入代碼或貼上連結"
@@ -169,11 +171,12 @@ function Lobby({ onCreate, onJoin }) {
             onClick={handleJoin}
             disabled={!parseCodeInput(matchID)}
           >
-            加入遊戲
+            加入棋局
           </button>
         </div>
       </div>
       <p className="lobby-footer">1 vs 1 · P2P 對戰 · 無需註冊</p>
+      <p className="lobby-disclaimer">重新整理或關閉視窗後，棋局會消失</p>
     </div>
   )
 }
@@ -194,7 +197,7 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
       try {
         await navigator.share({
           title: '鬥獸棋',
-          text: `加入我的鬥獸棋對局，代碼：${displayMatchID}`,
+          text: `加入我的鬥獸棋棋局，代碼：${displayMatchID}`,
           url: shareUrl,
         })
         return
