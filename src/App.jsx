@@ -6,14 +6,32 @@ import { Board } from './Board'
 
 const APP_ID = 'jungle-chess-v1'
 
-const peerOptions = {
-  config: {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:global.stun.twilio.com:3478' },
-    ],
-  },
-}
+// Build PeerJS options from environment variable.
+// Set VITE_PEERJS_HOST to your deployed PeerJS server hostname
+// (e.g. "jungle-chess-peerjs.onrender.com").
+const peerjsHost = import.meta.env.VITE_PEERJS_HOST
+const peerOptions = peerjsHost
+  ? {
+      host: peerjsHost,
+      port: 443,
+      secure: true,
+      path: '/',
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:global.stun.twilio.com:3478' },
+        ],
+      },
+    }
+  : {
+      // Fallback: use default PeerJS cloud (works locally)
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:global.stun.twilio.com:3478' },
+        ],
+      },
+    }
 
 function Loading() {
   return <div className="loading">Connecting…</div>
@@ -25,7 +43,7 @@ const HostClient = Client({
   multiplayer: P2P({
     isHost: true,
     peerOptions,
-    onError: (e) => console.error('P2P Error:', e),
+    onError: (e) => console.error('[P2P Host]', e),
   }),
   numPlayers: 2,
   loading: Loading,
@@ -37,7 +55,7 @@ const PeerClient = Client({
   board: Board,
   multiplayer: P2P({
     peerOptions,
-    onError: (e) => console.error('P2P Error:', e),
+    onError: (e) => console.error('[P2P Peer]', e),
   }),
   numPlayers: 2,
   loading: Loading,
