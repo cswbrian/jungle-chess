@@ -67,15 +67,23 @@ export function Board({ G, ctx, moves, playerID }) {
 
   if (!G?.cells) return <div className="board-wrap">Loading…</div>
 
+  const myColor = playerID === '0' ? 'Red' : 'Green'
+  const myClass = playerID === '0' ? 'text-p0' : 'text-p1'
+  const turnColor = currentPlayer === '0' ? 'Red' : 'Green'
+  const turnClass = currentPlayer === '0' ? 'text-p0' : 'text-p1'
+
   return (
     <div className="board-wrap">
+      <div className={`player-indicator ${myClass}`}>
+        You are {myColor}
+      </div>
       {gameover && (
         <div className="gameover">
           Winner: {gameover.winner === playerID ? 'You' : 'Opponent'}
         </div>
       )}
-      <p className="turn-info">
-        {gameover ? 'Game over' : isMyTurn ? 'Your turn' : "Opponent's turn"}
+      <p className={`turn-info ${turnClass}`}>
+        {gameover ? 'Game over' : isMyTurn ? `Your Turn (${turnColor})` : `Opponent's Turn (${turnColor})`}
       </p>
       <div
         className="board"
