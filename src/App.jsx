@@ -197,8 +197,7 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
       try {
         await navigator.share({
           title: '鬥獸棋',
-          text: `加入我的鬥獸棋棋局，代碼：${displayMatchID}`,
-          url: shareUrl,
+          text: `加入我的鬥獸棋棋局，代碼：${displayMatchID}\n\n${shareUrl}`,
         })
         return
       } catch (e) {
