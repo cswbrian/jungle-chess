@@ -1,0 +1,91 @@
+.board-wrap {
+  padding: 1rem;
+  max-width: 100%;
+  overflow: auto;
+}
+
+.turn-info {
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
+.gameover {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background: #1a472a;
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.board {
+  display: grid;
+  gap: 2px;
+  width: min(90vmin, 56 * 7px);
+  height: min(72vmin, 56 * 9px);
+  margin: 0 auto;
+  background: #2d5016;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.cell {
+  border: 1px solid #1a300d;
+  border-radius: 4px;
+  background: #3d6b20;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(12px, 3vmin, 18px);
+  font-weight: 700;
+  min-width: 0;
+  min-height: 0;
+}
+
+.cell:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.cell.river {
+  background: #1e3a5f;
+  border-color: #152a47;
+}
+
+.cell.trap {
+  background: #5c4a2d;
+  border-color: #4a3a20;
+}
+
+.cell.den {
+  background: #3d2d1a;
+  border-color: #2d2012;
+}
+
+.cell.selected {
+  outline: 3px solid #f0c040;
+  outline-offset: -1px;
+  z-index: 1;
+}
+
+.cell.legal {
+  background: #6b8e23;
+  box-shadow: inset 0 0 0 2px #b8d43a;
+}
+
+.cell.legal:hover {
+  background: #7a9e2a;
+}
+
+.piece {
+  color: #fff;
+  text-shadow: 0 1px 2px #000;
+}
+
+.piece.p0 {
+  color: #e8e8ff;
+}
+
+.piece.p1 {
+  color: #ffe0e0;
+}
