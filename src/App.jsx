@@ -4,6 +4,17 @@ import { P2P } from '@boardgame.io/p2p'
 import { JungleGame } from './Game'
 import { Board } from './Board'
 
+const APP_ID = 'jungle-chess-v1'
+
+const peerOptions = {
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:global.stun.twilio.com:3478' },
+    ],
+  },
+}
+
 function Loading() {
   return <div className="loading">Connecting…</div>
 }
@@ -11,7 +22,11 @@ function Loading() {
 const HostClient = Client({
   game: JungleGame,
   board: Board,
-  multiplayer: P2P({ isHost: true }),
+  multiplayer: P2P({
+    isHost: true,
+    peerOptions,
+    onError: (e) => console.error('P2P Error:', e),
+  }),
   numPlayers: 2,
   loading: Loading,
   debug: { collapseOnLoad: true },
@@ -20,7 +35,10 @@ const HostClient = Client({
 const PeerClient = Client({
   game: JungleGame,
   board: Board,
-  multiplayer: P2P(),
+  multiplayer: P2P({
+    peerOptions,
+    onError: (e) => console.error('P2P Error:', e),
+  }),
   numPlayers: 2,
   loading: Loading,
   debug: { collapseOnLoad: true },
@@ -68,6 +86,8 @@ function Lobby({ onCreate, onJoin }) {
 
 function GameScreen({ matchID, playerID, isHost, onBack }) {
   const ClientComponent = isHost ? HostClient : PeerClient
+  const displayMatchID = matchID.replace(`${APP_ID}-`, '')
+
   return (
     <div className="game-screen">
       <header className="game-header">
@@ -76,11 +96,11 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
         </button>
         <div className="match-info">
           <span>Code: </span>
-          <code>{matchID}</code>
+          <code>{displayMatchID}</code>
           <button
             type="button"
             className="copy"
-            onClick={() => navigator.clipboard?.writeText(matchID)}
+            onClick={() => navigator.clipboard?.writeText(displayMatchID)}
           >
             Copy
           </button>
@@ -110,8 +130,8 @@ export default function App() {
 
   return (
     <Lobby
-      onCreate={(matchID) => setGame({ matchID, playerID: '0', isHost: true })}
-      onJoin={(matchID) => setGame({ matchID, playerID: '1', isHost: false })}
+      onCreate={(matchID) => setGame({ matchID: `${APP_ID}-${matchID}`, playerID: '0', isHost: true })}
+      onJoin={(matchID) => setGame({ matchID: `${APP_ID}-${matchID}`, playerID: '1', isHost: false })}
     />
   )
 }
