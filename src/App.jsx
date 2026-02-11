@@ -219,7 +219,6 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
         <button type="button" className="back" onClick={onBack}>
           ← 返回
         </button>
-        <RulesButton onClick={() => setRulesOpen(true)} />
         <div className="match-info">
           <code>{displayMatchID}</code>
           <button type="button" className="copy" onClick={handleCopyCode}>
@@ -231,6 +230,7 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
             </button>
           )}
         </div>
+        <RulesButton onClick={() => setRulesOpen(true)} />
       </header>
       <ClientComponent matchID={matchID} playerID={playerID} />
     </div>
