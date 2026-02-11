@@ -1,6 +1,6 @@
 # 鬥獸棋 Jungle Chess
 
-1 vs 1 P2P 鬥獸棋 (Jungle / Dou Shou Qi) web app. No server, no database — uses [boardgame.io](https://boardgame.io/) with [@boardgame.io/p2p](https://github.com/boardgameio/p2p) (PeerJS) for signaling. Deploy as a static site to GitHub Pages or Cloudflare Pages.
+1 vs 1 P2P 鬥獸棋 (Jungle / Dou Shou Qi) web app. Uses [boardgame.io](https://boardgame.io/) with [@boardgame.io/p2p](https://github.com/boardgameio/p2p) (PeerJS) for peer-to-peer gameplay. Deploy as a static site to GitHub Pages or Cloudflare Pages.
 
 ## Run locally
 
@@ -17,14 +17,34 @@ Open http://localhost:5173. One tab: **Create game** and share the 6-letter code
 npm run build
 ```
 
-Output is in `dist/`.
+Output is in `dist/`. For production builds, set `VITE_PEERJS_HOST` to your PeerJS server hostname (see Deploy below).
 
 ## Deploy
 
-- **GitHub Pages**: Push the repo, enable Pages (Settings → Pages → Source: Deploy from branch, folder `dist` or `/ (root)`). Set the build branch to the one that contains the built `dist/` (e.g. run `npm run build` and commit `dist/`, or use a GitHub Action to build).
-- **Cloudflare Pages**: Connect the repo, set build command `npm run build`, build output directory `dist`.
+The app needs a **PeerJS signaling server** for production. The default PeerJS cloud (`0.peerjs.com`) is unreliable on deployed sites; hosting your own fixes this.
 
-Use **HTTPS** (required for WebRTC); both GitHub Pages and Cloudflare Pages provide it.
+### 1. Deploy the PeerJS server (Render, free)
+
+1. Go to [render.com](https://render.com) and connect your GitHub repo.
+2. New → **Web Service**.
+3. Set **Root Directory** to `peerjs-server`.
+4. Build Command: `npm install`, Start Command: `node index.js`.
+5. Create → Free plan. Copy the hostname (e.g. `jungle-chess-peerjs.onrender.com`).
+
+### 2. Deploy the static app
+
+**GitHub Pages** (uses the included workflow):
+
+1. Settings → Secrets and variables → Actions → **Variables**.
+2. Add `VITE_PEERJS_HOST` = your Render hostname.
+3. Push to `main`; the workflow builds and deploys.
+
+**Cloudflare Pages**:
+
+1. Connect the repo, build command `npm run build`, output `dist`.
+2. Add env var `VITE_PEERJS_HOST` = your Render hostname.
+
+HTTPS is required for WebRTC; both GitHub Pages and Cloudflare Pages provide it.
 
 ## Plan
 
