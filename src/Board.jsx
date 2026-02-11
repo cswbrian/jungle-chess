@@ -85,9 +85,18 @@ export function Board({ G, ctx, moves, playerID }) {
           獲勝：{gameover.winner === playerID ? '你' : '對手'}
         </div>
       )}
-      <p className={`board-status ${turnClass}`}>
-        {gameover ? '遊戲結束' : isMyTurn ? '你的回合' : '對手回合'}
-      </p>
+      <div
+        key={currentPlayer}
+        className={`board-status board-status-${gameover ? 'over' : isMyTurn ? 'yours' : 'theirs'} ${turnClass}`}
+      >
+        {gameover ? (
+          '遊戲結束'
+        ) : isMyTurn ? (
+          <><span className="status-dot" aria-hidden />你的回合</>
+        ) : (
+          <>對手回合</>
+        )}
+      </div>
       <div
         className="board"
         style={{

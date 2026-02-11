@@ -14,8 +14,74 @@
 
 .board-status {
   margin: 0 0 0.75rem 0;
-  font-weight: 600;
-  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: clamp(1rem, 2.5vw, 1.15rem);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.board-status-yours {
+  animation: turn-pop 0.4s ease-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .board-status-yours {
+    animation: turn-pop 0.4s ease-out, turn-pulse 2s ease-in-out infinite 0.5s;
+  }
+}
+
+.board-status-theirs {
+  opacity: 0.85;
+}
+
+.board-status-over {
+  opacity: 0.9;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .board-status-yours .status-dot {
+    animation: dot-blink 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes turn-pop {
+  from {
+    transform: scale(0.92);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes turn-pulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  }
+  50% {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18), 0 0 0 2px currentColor;
+  }
+}
+
+@keyframes dot-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 
 .disconnect-banner {
@@ -208,3 +274,21 @@
 /* Text colors for header */
 .text-p0 { color: #d32f2f; }
 .text-p1 { color: #2e7d32; }
+
+/* Turn status badge backgrounds */
+.board-status-yours.text-p0 {
+  background: rgba(211, 47, 47, 0.18);
+}
+.board-status-yours.text-p1 {
+  background: rgba(46, 125, 50, 0.18);
+}
+.board-status-theirs.text-p0 {
+  background: rgba(211, 47, 47, 0.08);
+}
+.board-status-theirs.text-p1 {
+  background: rgba(46, 125, 50, 0.08);
+}
+.board-status-over {
+  background: rgba(0, 0, 0, 0.08);
+  color: #555;
+}
