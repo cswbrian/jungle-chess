@@ -453,3 +453,24 @@ body {
   font-size: 1.1rem;
   color: #666;
 }
+
+.restart-btn {
+  min-width: 36px;
+  min-height: 32px;
+  padding: 0.25rem 0.5rem;
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.restart-btn:hover,
+.restart-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+}

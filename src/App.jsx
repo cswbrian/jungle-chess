@@ -86,7 +86,7 @@ function LocalBoardWrapper(props) {
 const LocalClient = Client({
   game: JungleGame,
   board: LocalBoardWrapper,
-  multiplayer: Local(),
+  multiplayer: Local({ persist: true, storageKey: 'jungle-chess' }),
   numPlayers: 2,
   loading: Loading,
   debug: false,
@@ -214,7 +214,7 @@ function Lobby({ onCreate, onJoin, onLocal }) {
         </div>
       </div>
       <p className="lobby-footer">1 vs 1 · 同機 或 P2P 對戰 · 無需註冊</p>
-      <p className="lobby-disclaimer">重新整理或關閉視窗後，棋局會消失</p>
+      <p className="lobby-disclaimer">同機對戰會自動儲存進度，P2P 對戰則會在重新整理後消失</p>
     </div>
   )
 }
@@ -223,7 +223,7 @@ function getShareUrl(code) {
   return window.location.origin + (import.meta.env.BASE_URL || '/') + '?code=' + encodeURIComponent(code)
 }
 
-function LocalGameScreen({ matchID, onBack }) {
+function LocalGameScreen({ matchID, onBack, onRestart }) {
   const [viewingPlayer, setViewingPlayer] = useState('0')
   const [rulesOpen, setRulesOpen] = useState(false)
 
@@ -235,6 +235,9 @@ function LocalGameScreen({ matchID, onBack }) {
           ← 返回
         </button>
         <span className="local-badge">同機對戰</span>
+        <button type="button" className="restart-btn" onClick={onRestart} title="重新開始">
+          ↻
+        </button>
         <RulesButton onClick={() => setRulesOpen(true)} />
       </header>
       <LocalClient
@@ -381,11 +384,53 @@ function getJoinCodeFromUrl() {
 export default function App() {
   const [game, setGame] = useState(null)
 
+  const startLocalGame = () => {
+    let id = localStorage.getItem('jungle-chess-local-match')
+    if (!id) {
+      id = `local-${generateMatchID()}`
+      localStorage.setItem('jungle-chess-local-match', id)
+    }
+    setGame({ isLocal: true, localMatchID: id })
+  }
+
+  const restartLocalGame = () => {
+    if (!window.confirm('確定要重新開始嗎？目前的進度將會遺失。')) return
+    
+    const id = `local-${generateMatchID()}`
+    localStorage.setItem('jungle-chess-local-match', id)
+    setGame({ isLocal: true, localMatchID: id })
+  }
+
+  // Check if there's a saved local game state
+  const hasSavedLocalGame = (matchID) => {
+    try {
+      const stateData = localStorage.getItem('jungle-chess_state')
+      if (!stateData) return false
+      const stateMap = JSON.parse(stateData)
+      // Check if there's a state entry for this matchID
+      const entry = stateMap.find(([id]) => id === matchID)
+      if (!entry) return false
+      // Check if the game is not finished
+      const state = entry[1]
+      return state && !state.ctx?.gameover
+    } catch {
+      return false
+    }
+  }
+
   useEffect(() => {
+    // Check for P2P join code first
     const code = getJoinCodeFromUrl().trim().toLowerCase().slice(0, 8)
     if (code) {
       setGame({ matchID: `${APP_ID}-${code}`, playerID: '1', isHost: false })
       window.history.replaceState({}, '', window.location.pathname)
+      return
+    }
+
+    // Check for saved local game and auto-restore if it exists
+    const savedMatchID = localStorage.getItem('jungle-chess-local-match')
+    if (savedMatchID && hasSavedLocalGame(savedMatchID)) {
+      setGame({ isLocal: true, localMatchID: savedMatchID })
     }
   }, [])
 
@@ -394,6 +439,7 @@ export default function App() {
       <LocalGameScreen
         matchID={game.localMatchID}
         onBack={() => setGame(null)}
+        onRestart={restartLocalGame}
       />
     )
   }
@@ -413,7 +459,7 @@ export default function App() {
     <Lobby
       onCreate={(matchID) => setGame({ matchID: `${APP_ID}-${matchID}`, playerID: '0', isHost: true })}
       onJoin={(matchID) => setGame({ matchID: `${APP_ID}-${matchID}`, playerID: '1', isHost: false })}
-      onLocal={() => setGame({ isLocal: true, localMatchID: `local-${generateMatchID()}` })}
+      onLocal={startLocalGame}
     />
   )
 }
