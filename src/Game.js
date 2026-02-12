@@ -121,6 +121,7 @@ export const JungleGame = {
   name: 'jungle',
   setup: () => ({
     cells: setupGrid(),
+    lastMove: null,
   }),
   turn: {
     minMoves: 1,
@@ -139,8 +140,28 @@ export const JungleGame = {
       const key = `${toR},${toC}`
       if (!legal.some(([r, c]) => `${r},${c}` === key)) return
 
+      const capturedPiece = G.cells[toR][toC]
+      
+      // Check if this is a river jump (Lion/Tiger moving more than 1 cell)
+      const isRiverJump = (cell.piece === RANK.LION || cell.piece === RANK.TIGER) && 
+                          (Math.abs(toR - fromR) > 1 || Math.abs(toC - fromC) > 1)
+      
+      // Check if moving into enemy trap
+      const enteredTrap = isTrap(toR, toC, playerID)
+      
       G.cells[fromR][fromC] = null
       G.cells[toR][toC] = { player: playerID, piece: cell.piece }
+      
+      // Store last move information
+      G.lastMove = {
+        from: { r: fromR, c: fromC },
+        to: { r: toR, c: toC },
+        piece: cell.piece,
+        player: playerID,
+        captured: capturedPiece,
+        isRiverJump,
+        enteredTrap,
+      }
     },
   },
   endIf: ({ G, ctx }) => {

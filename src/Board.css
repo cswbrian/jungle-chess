@@ -180,6 +180,26 @@
   color: rgba(0, 0, 0, 0.45);
 }
 
+.cell.last-move-from {
+  background: rgba(255, 235, 59, 0.35);
+  box-shadow: inset 0 0 0 2px rgba(255, 193, 7, 0.6);
+}
+
+.cell.last-move-to {
+  background: rgba(255, 235, 59, 0.5);
+  box-shadow: inset 0 0 0 3px rgba(255, 193, 7, 0.8);
+}
+
+.cell.river.last-move-from {
+  background: rgba(77, 166, 255, 0.8);
+  box-shadow: inset 0 0 0 2px rgba(255, 193, 7, 0.6);
+}
+
+.cell.river.last-move-to {
+  background: rgba(77, 166, 255, 0.9);
+  box-shadow: inset 0 0 0 3px rgba(255, 193, 7, 0.8);
+}
+
 .cell.selected {
   background: #ffe082;
   box-shadow: inset 0 0 0 3px #ff9800;
@@ -291,4 +311,31 @@
 .board-status-over {
   background: rgba(0, 0, 0, 0.08);
   color: #555;
+}
+
+/* Last move display */
+.last-move {
+  margin-top: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(139, 115, 85, 0.25);
+  border-radius: 10px;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  font-weight: 600;
+  text-align: center;
+  max-width: min(calc(100vw - 3rem), 400px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  line-height: 1.5;
+}
+
+.last-move-p0 {
+  color: #d32f2f;
+  border-color: rgba(211, 47, 47, 0.3);
+  background: rgba(255, 235, 238, 0.9);
+}
+
+.last-move-p1 {
+  color: #2e7d32;
+  border-color: rgba(46, 125, 50, 0.3);
+  background: rgba(232, 245, 233, 0.9);
 }

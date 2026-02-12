@@ -3,7 +3,7 @@ import { getLegalMoves } from './Game'
 import { isRiver, isTrap, isDen, PIECE_NAMES, PIECE_EMOJIS, ROWS, COLS, DEN_0, DEN_1 } from './constants'
 import './Board.css'
 
-function Cell({ r, c, cell, isSelected, isLegalMove, legalMovePlayer, onClick }) {
+function Cell({ r, c, cell, isSelected, isLegalMove, legalMovePlayer, isLastMoveFrom, isLastMoveTo, onClick }) {
   const river = isRiver(r, c)
   const trap0 = isTrap(r, c, '0')
   const trap1 = isTrap(r, c, '1')
@@ -14,6 +14,8 @@ function Cell({ r, c, cell, isSelected, isLegalMove, legalMovePlayer, onClick })
   if (river) className += ' river'
   if (trap0 || trap1) className += ' trap'
   if (den0 || den1) className += ' den'
+  if (isLastMoveFrom) className += ' last-move-from'
+  if (isLastMoveTo) className += ' last-move-to'
   if (isSelected) className += ' selected'
   if (isLegalMove) {
     className += ' legal'
@@ -78,6 +80,37 @@ export function Board({ G, ctx, moves, playerID }) {
   // Red (0) sees their pieces at top—flip so own pieces are at bottom
   const toActualRow = (displayRow) => (playerID === '0' ? ROWS - 1 - displayRow : displayRow)
 
+  // Format last move message
+  const lastMoveMsg = G.lastMove ? (() => {
+    const { piece, player, captured, isRiverJump, enteredTrap } = G.lastMove
+    const emoji = PIECE_EMOJIS[piece]
+    const pieceName = PIECE_NAMES[piece]
+    const playerColor = player === '0' ? '紅' : '綠'
+    
+    let action = ''
+    let suffix = ''
+    
+    if (captured) {
+      const capturedEmoji = PIECE_EMOJIS[captured.piece]
+      const capturedName = PIECE_NAMES[captured.piece]
+      const opponentColor = captured.player === '0' ? '紅' : '綠'
+      action = `用${emoji}${pieceName}吃掉${opponentColor}方${capturedEmoji}${capturedName}`
+    } else {
+      action = `移動${emoji}${pieceName}`
+    }
+    
+    // Add special move indicators
+    const extras = []
+    if (isRiverJump) extras.push('跳河')
+    if (enteredTrap) extras.push('進入陷阱')
+    
+    if (extras.length > 0) {
+      suffix = `（${extras.join('、')}）`
+    }
+    
+    return `${playerColor}方剛${action}${suffix}`
+  })() : null
+
   return (
     <div className="board-wrap">
       {gameover && (
@@ -115,11 +148,18 @@ export function Board({ G, ctx, moves, playerID }) {
               isSelected={selected?.[0] === actualRow && selected?.[1] === c}
               isLegalMove={legalMoves.some(([nr, nc]) => nr === actualRow && nc === c)}
               legalMovePlayer={selected ? currentPlayer : undefined}
+              isLastMoveFrom={G.lastMove && G.lastMove.from.r === actualRow && G.lastMove.from.c === c}
+              isLastMoveTo={G.lastMove && G.lastMove.to.r === actualRow && G.lastMove.to.c === c}
               onClick={() => handleCellClick(actualRow, c)}
             />
           ))
         })}
       </div>
+      {lastMoveMsg && G.lastMove && (
+        <div className={`last-move last-move-p${G.lastMove.player}`}>
+          {lastMoveMsg}
+        </div>
+      )}
     </div>
   )
 }
