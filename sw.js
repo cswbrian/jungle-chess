@@ -1,5 +1,5 @@
 const CACHE_NAME = 'jungle-chess-v1';
-const BASE_PATH = '/jungle-chess';
+const BASE_PATH = '';
 
 // Assets to cache on install
 const ASSETS_TO_CACHE = [
