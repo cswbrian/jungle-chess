@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Client } from 'boardgame.io/react'
 import { Local } from 'boardgame.io'
 import { P2P } from '@boardgame.io/p2p'
@@ -9,6 +9,8 @@ import { checkServerHealth } from './utils/serverCheck'
 
 const APP_ID = 'jungle-chess-v1'
 const P2P_ERROR_EVENT = 'bgio-p2p-error'
+const SERVER_WAKE_MAX_WAIT_MS = 90000
+const SERVER_WAKE_RETRY_MS = 3000
 
 // Build PeerJS options from environment variable.
 // Set VITE_PEERJS_HOST to your deployed PeerJS server hostname
@@ -42,6 +44,10 @@ function Loading({ text = "連線中…" }) {
   return <div className="loading">{text}</div>
 }
 
+function P2PLoading() {
+  return <div className="loading">正在同步棋局…</div>
+}
+
 const dispatchError = (e) => {
   console.error('[P2P Error]', e)
   window.dispatchEvent(new CustomEvent(P2P_ERROR_EVENT, { detail: e }))
@@ -49,26 +55,26 @@ const dispatchError = (e) => {
 
 const HostClient = Client({
   game: JungleGame,
-  board: Board,
+  board: P2PBoardWrapper,
   multiplayer: P2P({
     isHost: true,
     peerOptions,
     onError: dispatchError,
   }),
   numPlayers: 2,
-  loading: Loading,
+  loading: P2PLoading,
   debug: false,
 })
 
 const PeerClient = Client({
   game: JungleGame,
-  board: Board,
+  board: P2PBoardWrapper,
   multiplayer: P2P({
     peerOptions,
     onError: dispatchError,
   }),
   numPlayers: 2,
-  loading: Loading,
+  loading: P2PLoading,
   debug: false,
 })
 
@@ -202,6 +208,48 @@ function parseCodeInput(input) {
   }
 }
 
+function getPlayerMatchDataEntry(matchData, playerID) {
+  if (!matchData || playerID == null) return null
+
+  if (Array.isArray(matchData)) {
+    return matchData.find((entry) => String(entry?.id) === String(playerID)) || null
+  }
+
+  if (typeof matchData === 'object') {
+    const entry = matchData[playerID]
+    if (entry && typeof entry === 'object') return entry
+  }
+
+  return null
+}
+
+function isPlayerConnected(entry) {
+  if (!entry) return false
+  if (typeof entry.isConnected === 'boolean') return entry.isConnected
+  if (typeof entry.connected === 'boolean') return entry.connected
+  return false
+}
+
+function getOpponentConnected(matchData, playerID) {
+  if (playerID == null) return false
+  const opponentID = String(playerID) === '0' ? '1' : '0'
+  return isPlayerConnected(getPlayerMatchDataEntry(matchData, opponentID))
+}
+
+function P2PBoardWrapper(props) {
+  const { matchData, playerID, isConnected, onConnectionStateChange } = props
+
+  useEffect(() => {
+    if (!onConnectionStateChange) return
+    onConnectionStateChange({
+      transportConnected: Boolean(isConnected),
+      opponentConnected: getOpponentConnected(matchData, playerID),
+    })
+  }, [isConnected, matchData, onConnectionStateChange, playerID])
+
+  return <Board {...props} />
+}
+
 function Lobby({ onCreate, onJoin, onLocal }) {
   const [matchID, setMatchID] = useState('')
   const [rulesOpen, setRulesOpen] = useState(false)
@@ -307,31 +355,53 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
   const ClientComponent = isHost ? HostClient : PeerClient
   const displayMatchID = matchID.replace(`${APP_ID}-`, '')
   const [rulesOpen, setRulesOpen] = useState(false)
-  const [serverStatus, setServerStatus] = useState(peerjsHost ? 'checking' : 'ready') // checking, ready, error
+  const [serverStatus, setServerStatus] = useState(peerjsHost ? 'checking' : 'ready') // checking, ready
+  const [serverWaitMs, setServerWaitMs] = useState(0)
   const [connectionError, setConnectionError] = useState(null)
+  const [transportConnected, setTransportConnected] = useState(false)
+  const [opponentConnected, setOpponentConnected] = useState(false)
+  const [stateSynced, setStateSynced] = useState(false)
+  const [copyFeedback, setCopyFeedback] = useState('')
 
   useEffect(() => {
-    // 1. Check server health if using custom host
-    const checkServer = async () => {
-      if (!peerjsHost) return
-      
-      try {
-        const isHealthy = await checkServerHealth(`https://${peerjsHost}`)
-        if (isHealthy) {
-          setServerStatus('ready')
-        } else {
-          console.warn('Server check failed, but attempting connection anyway...')
-          setServerStatus('ready') // Proceed but maybe log
+    // 1. Check / wake server if using custom host (handles cold starts).
+    let cancelled = false
+    const startedAt = Date.now()
+    setServerWaitMs(0)
+    const waitTimerID = window.setInterval(() => {
+      setServerWaitMs(Date.now() - startedAt)
+    }, 1000)
+
+    const warmupServer = async () => {
+      if (!peerjsHost) {
+        setServerStatus('ready')
+        return
+      }
+
+      while (!cancelled) {
+        try {
+          const isHealthy = await checkServerHealth(`https://${peerjsHost}`)
+          if (cancelled) return
+          if (isHealthy) {
+            setServerStatus('ready')
+            return
+          }
+        } catch (e) {
+          console.error(e)
         }
-      } catch (e) {
-        console.error(e)
-        setServerStatus('ready') // Fallback to try anyway
+
+        const elapsed = Date.now() - startedAt
+        if (elapsed >= SERVER_WAKE_MAX_WAIT_MS) {
+          console.warn('Server wake-up timeout. Proceeding to direct connection attempts.')
+          setServerStatus('ready')
+          return
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, SERVER_WAKE_RETRY_MS))
       }
     }
 
-    if (peerjsHost) {
-      checkServer()
-    }
+    warmupServer()
 
     // 2. Listen for P2P errors
     const handleError = (event) => {
@@ -348,7 +418,23 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
     }
 
     window.addEventListener(P2P_ERROR_EVENT, handleError)
-    return () => window.removeEventListener(P2P_ERROR_EVENT, handleError)
+    return () => {
+      cancelled = true
+      window.clearInterval(waitTimerID)
+      window.removeEventListener(P2P_ERROR_EVENT, handleError)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!copyFeedback) return undefined
+    const timerID = window.setTimeout(() => setCopyFeedback(''), 1400)
+    return () => window.clearTimeout(timerID)
+  }, [copyFeedback])
+
+  const handleConnectionStateChange = useCallback(({ transportConnected: connected, opponentConnected: joined }) => {
+    setTransportConnected(Boolean(connected))
+    setOpponentConnected(Boolean(joined))
+    setStateSynced(true)
   }, [])
 
   const shareUrl = getShareUrl(displayMatchID)
@@ -366,13 +452,23 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
       }
     }
     navigator.clipboard?.writeText(shareUrl)
+    setCopyFeedback('已複製連結')
   }
 
   const handleCopyCode = () => {
     navigator.clipboard?.writeText(displayMatchID)
+    setCopyFeedback('已複製代碼')
+  }
+
+  const handleCopyLink = () => {
+    navigator.clipboard?.writeText(shareUrl)
+    setCopyFeedback('已複製連結')
   }
 
   if (serverStatus === 'checking') {
+    const waitedSeconds = Math.floor(serverWaitMs / 1000)
+    const remainingSeconds = Math.max(0, Math.ceil((SERVER_WAKE_MAX_WAIT_MS - serverWaitMs) / 1000))
+
     return (
       <div className="game-screen">
          <header className={`game-header player-${playerID}`}>
@@ -380,7 +476,11 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
             ← 返回
           </button>
         </header>
-        <Loading text="正在喚醒伺服器..." />
+        <div className="loading">
+          <p>正在喚醒連線伺服器...</p>
+          <p className="server-waiting-note">已等待 {waitedSeconds} 秒。冷啟動通常需要 20 - 90 秒。</p>
+          <p className="server-waiting-note">若仍無回應，約 {remainingSeconds} 秒後會直接嘗試連線。</p>
+        </div>
         <BuyMeCoffeeFooter />
       </div>
     )
@@ -427,7 +527,32 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
         </div>
         <RulesButton onClick={() => setRulesOpen(true)} />
       </header>
-      <ClientComponent matchID={matchID} playerID={playerID} />
+      <div className={`p2p-status-banner ${(isHost ? opponentConnected : stateSynced) ? 'is-ready' : 'is-waiting'}`}>
+        {isHost
+          ? opponentConnected
+            ? '對手已加入，開始對戰！'
+            : '等待對手加入中：請先分享代碼或連結。'
+          : stateSynced
+            ? '已連上主機，開始對戰！'
+            : '正在連線主機...'}
+      </div>
+      {isHost && !opponentConnected && (
+        <section className="p2p-host-guide">
+          <h3>邀請對手加入</h3>
+          <p>1. 按「分享」或「複製連結」傳給對手。</p>
+          <p>2. 對手加入後，狀態會更新為「對手已加入」。</p>
+          <div className="p2p-host-guide-actions">
+            <button type="button" onClick={handleCopyCode}>複製代碼</button>
+            <button type="button" onClick={handleCopyLink}>複製連結</button>
+          </div>
+          {copyFeedback && <p className="p2p-copy-feedback">{copyFeedback}</p>}
+        </section>
+      )}
+      <ClientComponent
+        matchID={matchID}
+        playerID={playerID}
+        onConnectionStateChange={handleConnectionStateChange}
+      />
       <BuyMeCoffeeFooter />
     </div>
   )
@@ -458,36 +583,12 @@ export default function App() {
     setGame({ isLocal: true, localMatchID: id })
   }
 
-  // Check if there's a saved local game state
-  const hasSavedLocalGame = (matchID) => {
-    try {
-      const stateData = localStorage.getItem('jungle-chess_state')
-      if (!stateData) return false
-      const stateMap = JSON.parse(stateData)
-      // Check if there's a state entry for this matchID
-      const entry = stateMap.find(([id]) => id === matchID)
-      if (!entry) return false
-      // Check if the game is not finished
-      const state = entry[1]
-      return state && !state.ctx?.gameover
-    } catch {
-      return false
-    }
-  }
-
   useEffect(() => {
     // Check for P2P join code first
     const code = getJoinCodeFromUrl().trim().toLowerCase().slice(0, 8)
     if (code) {
       setGame({ matchID: `${APP_ID}-${code}`, playerID: '1', isHost: false })
       window.history.replaceState({}, '', window.location.pathname)
-      return
-    }
-
-    // Check for saved local game and auto-restore if it exists
-    const savedMatchID = localStorage.getItem('jungle-chess-local-match')
-    if (savedMatchID && hasSavedLocalGame(savedMatchID)) {
-      setGame({ isLocal: true, localMatchID: savedMatchID })
     }
   }, [])
 
