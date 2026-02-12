@@ -49,6 +49,7 @@ function Cell({ r, c, cell, isSelected, isLegalMove, legalMovePlayer, isLastMove
 export function Board({ G, ctx, moves, playerID }) {
   const [selected, setSelected] = useState(null)
   const [showWinnerOverlay, setShowWinnerOverlay] = useState(false)
+  const [eventNotification, setEventNotification] = useState(null)
   const currentPlayer = ctx.currentPlayer
   const isMyTurn = currentPlayer === playerID
   const gameover = ctx.gameover
@@ -81,35 +82,43 @@ export function Board({ G, ctx, moves, playerID }) {
   // Red (0) sees their pieces at top—flip so own pieces are at bottom
   const toActualRow = (displayRow) => (playerID === '0' ? ROWS - 1 - displayRow : displayRow)
 
-  // Format last move message
-  const lastMoveMsg = G.lastMove ? (() => {
+  // Format last move message with badge components
+  const lastMoveContent = G.lastMove ? (() => {
     const { piece, player, captured, isRiverJump, enteredTrap } = G.lastMove
     const emoji = PIECE_EMOJIS[piece]
     const pieceName = PIECE_NAMES[piece]
-    const playerColor = player === '0' ? '紅' : '綠'
-    
-    let action = ''
-    let suffix = ''
     
     if (captured) {
       const capturedEmoji = PIECE_EMOJIS[captured.piece]
       const capturedName = PIECE_NAMES[captured.piece]
-      const opponentColor = captured.player === '0' ? '紅' : '綠'
-      action = `用${emoji}${pieceName}吃掉${opponentColor}方${capturedEmoji}${capturedName}`
+      
+      // Integrate special actions into the sentence
+      let action = '剛吃掉'
+      if (isRiverJump) {
+        action = '剛跳河吃掉'
+      } else if (enteredTrap) {
+        action = '剛進入陷阱吃掉'
+      }
+      
+      return {
+        attacker: { emoji, name: pieceName, player },
+        middle: action,
+        target: { emoji: capturedEmoji, name: capturedName, player: captured.player },
+      }
     } else {
-      action = `移動${emoji}${pieceName}`
+      // Prioritize special actions for non-capture moves
+      let action = '剛移動'
+      if (enteredTrap) {
+        action = '剛進入陷阱'
+      } else if (isRiverJump) {
+        action = '剛跳河'
+      }
+      
+      return {
+        piece: { emoji, name: pieceName, player },
+        middle: action,
+      }
     }
-    
-    // Add special move indicators
-    const extras = []
-    if (isRiverJump) extras.push('跳河')
-    if (enteredTrap) extras.push('進入陷阱')
-    
-    if (extras.length > 0) {
-      suffix = `（${extras.join('、')}）`
-    }
-    
-    return `${playerColor}方剛${action}${suffix}`
   })() : null
 
   // Show overlay when game ends
@@ -118,6 +127,48 @@ export function Board({ G, ctx, moves, playerID }) {
       setShowWinnerOverlay(true)
     }
   }, [gameover])
+
+  // Show event notification for captures and traps
+  useEffect(() => {
+    if (!G.lastMove || gameover) return
+    
+    const { captured, enteredTrap, piece, player } = G.lastMove
+    
+    if (captured) {
+      const capturedEmoji = PIECE_EMOJIS[captured.piece]
+      const capturedName = PIECE_NAMES[captured.piece]
+      const attackerEmoji = PIECE_EMOJIS[piece]
+      const attackerName = PIECE_NAMES[piece]
+      
+      const attackerBadge = `<span class="piece-badge piece-badge-p${player}">${attackerEmoji}${attackerName}</span>`
+      const capturedBadge = `<span class="piece-badge piece-badge-p${captured.player}">${capturedEmoji}${capturedName}</span>`
+      
+      setEventNotification({
+        type: 'capture',
+        message: `${attackerBadge} 吃掉 ${capturedBadge}`,
+        emoji: '💥',
+        player: player,
+      })
+      
+      const timer = setTimeout(() => setEventNotification(null), 2000)
+      return () => clearTimeout(timer)
+    } else if (enteredTrap) {
+      const pieceEmoji = PIECE_EMOJIS[piece]
+      const pieceName = PIECE_NAMES[piece]
+      
+      const pieceBadge = `<span class="piece-badge piece-badge-p${player}">${pieceEmoji}${pieceName}</span>`
+      
+      setEventNotification({
+        type: 'trap',
+        message: `${pieceBadge} 進入陷阱`,
+        emoji: '⚠️',
+        player: player,
+      })
+      
+      const timer = setTimeout(() => setEventNotification(null), 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [G.lastMove, gameover])
 
   const winnerColor = gameover?.winner === '0' ? '紅' : '綠'
   const winnerClass = gameover?.winner === '0' ? 'winner-p0' : 'winner-p1'
@@ -141,8 +192,19 @@ export function Board({ G, ctx, moves, playerID }) {
             </button>
             <div className="winner-trophy">{winningPieceEmoji}</div>
             <div className="winner-title">{winnerColor}方獲勝！</div>
-            <div className="winner-subtitle">{winningPieceEmoji}{winningPieceName}攻陷對方獸穴</div>
+            <div className="winner-subtitle">
+              <span className={`piece-badge piece-badge-p${gameover.winner}`}>
+                {winningPieceEmoji}{winningPieceName}
+              </span>
+              攻陷對方獸穴
+            </div>
           </div>
+        </div>
+      )}
+      {eventNotification && (
+        <div className={`event-notification event-${eventNotification.type} event-p${eventNotification.player}`}>
+          <div className="event-emoji">{eventNotification.emoji}</div>
+          <div className="event-message" dangerouslySetInnerHTML={{ __html: eventNotification.message }} />
         </div>
       )}
       <div
@@ -182,9 +244,26 @@ export function Board({ G, ctx, moves, playerID }) {
           ))
         })}
       </div>
-      {lastMoveMsg && G.lastMove && (
+      {lastMoveContent && G.lastMove && (
         <div className={`last-move last-move-p${G.lastMove.player}`}>
-          {lastMoveMsg}
+          {lastMoveContent.attacker ? (
+            <>
+              <span className={`piece-badge piece-badge-p${lastMoveContent.attacker.player}`}>
+                {lastMoveContent.attacker.emoji}{lastMoveContent.attacker.name}
+              </span>
+              {lastMoveContent.middle}
+              <span className={`piece-badge piece-badge-p${lastMoveContent.target.player}`}>
+                {lastMoveContent.target.emoji}{lastMoveContent.target.name}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className={`piece-badge piece-badge-p${lastMoveContent.piece.player}`}>
+                {lastMoveContent.piece.emoji}{lastMoveContent.piece.name}
+              </span>
+              {lastMoveContent.middle}
+            </>
+          )}
         </div>
       )}
     </div>
