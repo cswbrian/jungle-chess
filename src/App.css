@@ -253,6 +253,20 @@ body {
   background: linear-gradient(90deg, #2e7d32, #43a047);
 }
 
+.action-card-local::before {
+  background: linear-gradient(90deg, #5c6bc0, #3949ab);
+}
+
+.action-card-local button {
+  background: linear-gradient(135deg, #5c6bc0, #3949ab);
+  color: #fff;
+}
+
+.action-card-local button:hover:not(:disabled),
+.action-card-local button:active:not(:disabled) {
+  filter: brightness(1.08);
+}
+
 .action-icon {
   display: block;
   font-size: 1.25rem;
@@ -361,6 +375,17 @@ body {
 
 .game-header.player-1 {
   background: #2e7d32;
+}
+
+.game-header-local {
+  background: #5c6bc0;
+}
+
+.game-header-local .local-badge {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .game-header .back {

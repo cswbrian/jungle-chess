@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Client } from 'boardgame.io/react'
+import { Local } from 'boardgame.io'
 import { P2P } from '@boardgame.io/p2p'
 import { JungleGame } from './Game'
 import { Board } from './Board'
@@ -63,6 +64,26 @@ const PeerClient = Client({
   debug: false,
 })
 
+/** Board wrapper for local play: always show from current player's perspective and report turn changes. */
+function LocalBoardWrapper(props) {
+  const { ctx, onTurnChange } = props
+  useEffect(() => {
+    if (ctx?.currentPlayer && onTurnChange) {
+      onTurnChange(ctx.currentPlayer)
+    }
+  }, [ctx?.currentPlayer, onTurnChange])
+  return <Board {...props} playerID={ctx?.currentPlayer ?? '0'} />
+}
+
+const LocalClient = Client({
+  game: JungleGame,
+  board: LocalBoardWrapper,
+  multiplayer: Local(),
+  numPlayers: 2,
+  loading: Loading,
+  debug: false,
+})
+
 function generateMatchID() {
   return Math.random().toString(36).slice(2, 8)
 }
@@ -121,7 +142,7 @@ function parseCodeInput(input) {
   }
 }
 
-function Lobby({ onCreate, onJoin }) {
+function Lobby({ onCreate, onJoin, onLocal }) {
   const [matchID, setMatchID] = useState('')
   const [rulesOpen, setRulesOpen] = useState(false)
 
@@ -146,6 +167,15 @@ function Lobby({ onCreate, onJoin }) {
       </div>
       <RulesModal open={rulesOpen} onClose={() => setRulesOpen(false)} />
       <div className="lobby-actions">
+        <div className="action-card action-card-local">
+          <span className="action-icon" aria-hidden>◉</span>
+          <h2>同機對戰</h2>
+          <p className="action-desc">兩人共用一台裝置輪流下棋</p>
+          <button type="button" onClick={onLocal}>
+            開始
+          </button>
+        </div>
+        <span className="lobby-or">或</span>
         <div className="action-card action-card-create">
           <span className="action-icon" aria-hidden>✦</span>
           <h2>開新局</h2>
@@ -175,7 +205,7 @@ function Lobby({ onCreate, onJoin }) {
           </button>
         </div>
       </div>
-      <p className="lobby-footer">1 vs 1 · P2P 對戰 · 無需註冊</p>
+      <p className="lobby-footer">1 vs 1 · 同機 或 P2P 對戰 · 無需註冊</p>
       <p className="lobby-disclaimer">重新整理或關閉視窗後，棋局會消失</p>
     </div>
   )
@@ -183,6 +213,29 @@ function Lobby({ onCreate, onJoin }) {
 
 function getShareUrl(code) {
   return window.location.origin + (import.meta.env.BASE_URL || '/') + '?code=' + encodeURIComponent(code)
+}
+
+function LocalGameScreen({ matchID, onBack }) {
+  const [viewingPlayer, setViewingPlayer] = useState('0')
+  const [rulesOpen, setRulesOpen] = useState(false)
+
+  return (
+    <div className="game-screen">
+      <RulesModal open={rulesOpen} onClose={() => setRulesOpen(false)} />
+      <header className="game-header game-header-local">
+        <button type="button" className="back" onClick={onBack}>
+          ← 返回
+        </button>
+        <span className="local-badge">同機對戰</span>
+        <RulesButton onClick={() => setRulesOpen(true)} />
+      </header>
+      <LocalClient
+        matchID={matchID}
+        playerID={viewingPlayer}
+        onTurnChange={setViewingPlayer}
+      />
+    </div>
+  )
 }
 
 function GameScreen({ matchID, playerID, isHost, onBack }) {
@@ -252,6 +305,15 @@ export default function App() {
     }
   }, [])
 
+  if (game?.isLocal) {
+    return (
+      <LocalGameScreen
+        matchID={game.localMatchID}
+        onBack={() => setGame(null)}
+      />
+    )
+  }
+
   if (game) {
     return (
       <GameScreen
@@ -267,6 +329,7 @@ export default function App() {
     <Lobby
       onCreate={(matchID) => setGame({ matchID: `${APP_ID}-${matchID}`, playerID: '0', isHost: true })}
       onJoin={(matchID) => setGame({ matchID: `${APP_ID}-${matchID}`, playerID: '1', isHost: false })}
+      onLocal={() => setGame({ isLocal: true, localMatchID: `local-${generateMatchID()}` })}
     />
   )
 }
