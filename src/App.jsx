@@ -187,7 +187,7 @@ function Lobby({ onCreate, onJoin, onLocal }) {
         <div className="action-card action-card-create">
           <span className="action-icon" aria-hidden>✦</span>
           <h2>開新局</h2>
-          <p className="action-desc">開房後將代碼分享畀朋友</p>
+          <p className="action-desc">開房後將代碼分享給朋友</p>
           <button type="button" onClick={() => onCreate(generateMatchID())}>
             開局
           </button>
