@@ -468,6 +468,7 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
   if (serverStatus === 'checking') {
     const waitedSeconds = Math.floor(serverWaitMs / 1000)
     const remainingSeconds = Math.max(0, Math.ceil((SERVER_WAKE_MAX_WAIT_MS - serverWaitMs) / 1000))
+    const progressPercent = Math.min(100, Math.round((serverWaitMs / SERVER_WAKE_MAX_WAIT_MS) * 100))
 
     return (
       <div className="game-screen">
@@ -477,9 +478,16 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
           </button>
         </header>
         <div className="loading">
-          <p>正在喚醒連線伺服器...</p>
-          <p className="server-waiting-note">已等待 {waitedSeconds} 秒。冷啟動通常需要 20 - 90 秒。</p>
-          <p className="server-waiting-note">若仍無回應，約 {remainingSeconds} 秒後會直接嘗試連線。</p>
+          <p>正在喚醒伺服器...</p>
+          <div className="server-progress-bar">
+            <div className="server-progress-fill" style={{ width: `${progressPercent}%` }} />
+          </div>
+          <p className="server-waiting-note">已等待 {waitedSeconds} 秒</p>
+          <p className="server-waiting-note">免費伺服器閒置後會休眠，連線需時重啟，請多包涵。</p>
+          <p className="server-waiting-note">約需 <strong>20 ~ 90 秒</strong>，請耐心等候。</p>
+          {remainingSeconds > 0 && (
+            <p className="server-waiting-note server-waiting-fallback">若仍無回應，約 {remainingSeconds} 秒後會直接嘗試連線。</p>
+          )}
         </div>
         <BuyMeCoffeeFooter />
       </div>

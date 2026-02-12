@@ -569,6 +569,32 @@ body {
   color: rgba(80, 60, 40, 0.8);
 }
 
+.server-waiting-note strong {
+  color: rgba(60, 40, 20, 0.95);
+}
+
+.server-waiting-fallback {
+  margin-top: 0.7rem;
+  font-size: 0.82rem;
+  color: rgba(80, 60, 40, 0.55);
+}
+
+.server-progress-bar {
+  margin: 0.8rem auto 0.5rem;
+  width: min(80%, 260px);
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.server-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #b8860b, #daa520);
+  transition: width 1s linear;
+}
+
 .p2p-status-banner {
   margin: 0.6rem 0.7rem 0;
   padding: 0.55rem 0.7rem;
