@@ -250,7 +250,7 @@ function P2PBoardWrapper(props) {
   return <Board {...props} />
 }
 
-function Lobby({ onCreate, onJoin, onLocal }) {
+function Lobby({ onCreate, onJoin, onLocal, hasLocalGame }) {
   const [matchID, setMatchID] = useState('')
   const [rulesOpen, setRulesOpen] = useState(false)
 
@@ -279,7 +279,7 @@ function Lobby({ onCreate, onJoin, onLocal }) {
           <h2>同機對戰</h2>
           <p className="action-desc">兩人共用一台裝置輪流下棋</p>
           <button type="button" onClick={onLocal}>
-            開始
+            {hasLocalGame ? '繼續遊戲' : '開始'}
           </button>
         </div>
         <div className="action-card action-card-p2p">
@@ -617,11 +617,32 @@ export default function App() {
     )
   }
 
+  const hasLocalGame = (() => {
+    const localMatchID = localStorage.getItem('jungle-chess-local-match')
+    if (!localMatchID) return false
+    try {
+      const raw = localStorage.getItem('jungle-chess_state')
+      if (!raw) return false
+      const entries = JSON.parse(raw)
+      const entry = Array.isArray(entries) && entries.find(([id]) => id === localMatchID)
+      if (!entry) return false
+      const state = entry[1]
+      if (!state) return false
+      const stateID = state._stateID
+      const gameover = state.ctx?.gameover
+      const hasProgress = (typeof stateID === 'number' && stateID > 0) || (gameover != null && gameover !== undefined)
+      return hasProgress
+    } catch {
+      return false
+    }
+  })()
+
   return (
     <Lobby
       onCreate={(matchID) => setGame({ matchID: `${APP_ID}-${matchID}`, playerID: '0', isHost: true })}
       onJoin={(matchID) => setGame({ matchID: `${APP_ID}-${matchID}`, playerID: '1', isHost: false })}
       onLocal={startLocalGame}
+      hasLocalGame={hasLocalGame}
     />
   )
 }
