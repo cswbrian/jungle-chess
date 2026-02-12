@@ -105,6 +105,42 @@ const RULES_CONTENT = [
   { title: '獸穴', text: '佔領敵方獸穴即勝。' },
 ]
 
+const HERO_RELATIONSHIPS = [
+  [8, 7],
+  [7, 6],
+  [6, 5],
+  [5, 4],
+  [4, 3],
+  [3, 2],
+  [2, 1],
+  [1, 8], // Special rule: mouse can capture elephant.
+]
+
+function AnimatedHeroRelationship() {
+  const [relationIndex, setRelationIndex] = useState(0)
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setRelationIndex((prev) => (prev + 1) % HERO_RELATIONSHIPS.length)
+    }, 2200)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const [attackerRank, defenderRank] = HERO_RELATIONSHIPS[relationIndex]
+  const attacker = PIECE_EMOJIS[attackerRank]
+  const defender = PIECE_EMOJIS[defenderRank]
+
+  return (
+    <div className="hero-relation" aria-live="polite" aria-label="棋子大小關係">
+      <div key={relationIndex} className="hero-relation-pair">
+        <span className="hero-relation-emoji">{attacker}</span>
+        <span className="hero-relation-symbol">&gt;</span>
+        <span className="hero-relation-emoji">{defender}</span>
+      </div>
+    </div>
+  )
+}
+
 function RulesModal({ open, onClose }) {
   if (!open) return null
   return (
@@ -178,9 +214,8 @@ function Lobby({ onCreate, onJoin, onLocal }) {
   return (
     <div className="lobby">
       <div className="lobby-hero">
-        <span className="lobby-badge">{[8,7,6,5,4,3,2,1].map(r => PIECE_EMOJIS[r]).join('')}</span>
+        <AnimatedHeroRelationship />
         <h1 className="lobby-title">鬥獸棋</h1>
-        <p className="lobby-subtitle">Jungle Chess</p>
         <button
           type="button"
           className="lobby-rules-link"
@@ -199,38 +234,39 @@ function Lobby({ onCreate, onJoin, onLocal }) {
             開始
           </button>
         </div>
-        <span className="lobby-or">或</span>
-        <div className="action-card action-card-create">
+        <div className="action-card action-card-p2p">
           <span className="action-icon" aria-hidden>✦</span>
-          <h2>開新局</h2>
-          <p className="action-desc">開房後將代碼分享給朋友</p>
-          <button type="button" onClick={() => onCreate(generateMatchID())}>
-            開局
-          </button>
-        </div>
-        <span className="lobby-or">或</span>
-        <div className="action-card action-card-join">
-          <span className="action-icon" aria-hidden>◆</span>
-          <h2>加入棋局</h2>
-          <p className="action-desc">輸入代碼或貼上連結</p>
-          <input
-            type="text"
-            placeholder="輸入代碼或貼上連結"
-            value={matchID}
-            onChange={(e) => setMatchID(e.target.value)}
-            maxLength={200}
-          />
-          <button
-            type="button"
-            onClick={handleJoin}
-            disabled={!parseCodeInput(matchID)}
-          >
-            加入棋局
-          </button>
+          <h2>P2P 對戰</h2>
+          <p className="action-desc">可開新局分享代碼，或輸入代碼加入朋友棋局</p>
+          <div className="p2p-actions">
+            <button
+              type="button"
+              className="p2p-create-btn"
+              onClick={() => onCreate(generateMatchID())}
+            >
+              開新局
+            </button>
+            <div className="p2p-join-row">
+              <input
+                type="text"
+                placeholder="輸入代碼或貼上連結"
+                value={matchID}
+                onChange={(e) => setMatchID(e.target.value)}
+                maxLength={200}
+              />
+              <button
+                type="button"
+                className="p2p-join-btn"
+                onClick={handleJoin}
+                disabled={!parseCodeInput(matchID)}
+              >
+                加入棋局
+              </button>
+            </div>
+          </div>
+          <p className="lobby-disclaimer">同機對戰會自動儲存進度，P2P 對戰則會在重新整理後消失</p>
         </div>
       </div>
-      <p className="lobby-footer">1 vs 1 · 同機 或 P2P 對戰 · 無需註冊</p>
-      <p className="lobby-disclaimer">同機對戰會自動儲存進度，P2P 對戰則會在重新整理後消失</p>
       <BuyMeCoffeeFooter />
     </div>
   )

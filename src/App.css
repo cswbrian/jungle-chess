@@ -11,7 +11,7 @@ body {
   margin: 0;
   min-height: 100dvh;
   font-family: 'PingFang TC', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
-  background: linear-gradient(160deg, #e8dcc4 0%, #d4c4a8 35%, #c4b896 100%);
+  background: #ece7dc;
 }
 
 #root {
@@ -22,47 +22,106 @@ body {
 .lobby {
   max-width: 420px;
   margin: 0 auto;
-  padding: clamp(1.25rem, 6vw, 2.5rem);
-  padding-top: max(1.25rem, env(safe-area-inset-top));
-  padding-bottom: 4rem;
+  padding: clamp(0.85rem, 3.8vw, 1.35rem);
+  padding-top: max(0.85rem, env(safe-area-inset-top));
+  padding-bottom: calc(3.15rem + env(safe-area-inset-bottom));
   text-align: center;
-  min-height: 100dvh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.lobby > * {
+  position: relative;
+  z-index: 1;
 }
 
 .lobby-hero {
-  margin-bottom: 1.75rem;
+  margin-bottom: 0.7rem;
 }
 
 .lobby-badge {
   display: inline-block;
-  font-size: clamp(1.25rem, 4vw, 1.6rem);
+  font-size: clamp(1.05rem, 3.8vw, 1.35rem);
   letter-spacing: 0.15em;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
 .lobby-title {
-  font-size: clamp(2rem, 8vw, 2.5rem);
-  font-weight: 800;
-  margin: 0 0 0.15rem 0;
-  color: #3d2e1f;
+  font-size: clamp(1.65rem, 6.8vw, 2.2rem);
+  font-weight: 900;
+  margin: 0 0 0.05rem 0;
+  color: #1f1c17;
   letter-spacing: 0.08em;
 }
 
 .lobby-subtitle {
-  font-size: 1rem;
-  color: rgba(80, 60, 40, 0.7);
-  margin: 0 0 0.75rem 0;
-  letter-spacing: 0.12em;
+  font-size: 0.9rem;
+  color: rgba(31, 28, 23, 0.62);
+  margin: 0 0 0.4rem 0;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
+  font-weight: 700;
+}
+
+.hero-relation {
+  min-height: clamp(4.6rem, 40vw, 10.5rem);
+  margin: 0.08rem 0 0.3rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-relation-pair {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: min(calc(100vw - 2.8rem), 390px);
+  gap: 0.32rem;
+  animation: hero-relation-fade 2.2s ease-in-out both;
+}
+
+.hero-relation-emoji {
+  font-size: clamp(2.95rem, 32vw, 8rem);
+  line-height: 1;
+}
+
+.hero-relation-symbol {
+  font-size: clamp(1.65rem, 7.8vw, 2.5rem);
+  font-weight: 900;
+  color: rgba(31, 28, 23, 0.88);
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+@keyframes hero-relation-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  18% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  82% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
 }
 
 .lobby-rules-link {
   background: none;
   border: none;
-  color: #8b7355;
-  font-size: 0.9rem;
+  color: #2b2720;
+  font-size: 0.8rem;
+  font-weight: 700;
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -75,16 +134,16 @@ body {
   color: #6b5344;
 }
 
-.lobby-footer {
-  margin: 1.25rem 0 0 0;
-  font-size: 0.8rem;
-  color: rgba(80, 60, 40, 0.5);
+.lobby-disclaimer {
+  margin: 0.2rem 0 0 0;
+  font-size: 0.68rem;
+  color: rgba(80, 60, 40, 0.45);
+  line-height: 1.3;
 }
 
-.lobby-disclaimer {
-  margin: 0.35rem 0 0 0;
-  font-size: 0.75rem;
-  color: rgba(80, 60, 40, 0.45);
+.action-card-p2p .lobby-disclaimer {
+  margin-top: 0.45rem;
+  font-size: 0.66rem;
 }
 
 /* Legacy rules-btn (used in game header) */
@@ -214,24 +273,23 @@ body {
 .lobby-actions {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.52rem;
   flex: 1;
+  justify-content: center;
+  min-height: 0;
 }
 
 .lobby-or {
-  align-self: center;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: rgba(80, 60, 40, 0.55);
+  display: none;
 }
 
 .action-card {
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 16px;
-  padding: 1.25rem 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 0.72rem 0.8rem;
   text-align: center;
-  border: 1px solid rgba(139, 115, 85, 0.2);
-  box-shadow: 0 4px 20px rgba(80, 60, 40, 0.08);
+  border: 2px solid rgba(31, 28, 23, 0.17);
+  box-shadow: none;
   position: relative;
   overflow: hidden;
 }
@@ -242,19 +300,23 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 4px;
 }
 
 .action-card-create::before {
-  background: linear-gradient(90deg, #c45c4a, #d32f2f);
+  background: #d32f2f;
 }
 
 .action-card-join::before {
-  background: linear-gradient(90deg, #2e7d32, #43a047);
+  background: #1b5e20;
+}
+
+.action-card-p2p::before {
+  background: #1b5e20;
 }
 
 .action-card-local::before {
-  background: linear-gradient(90deg, #5c6bc0, #3949ab);
+  background: #3949ab;
 }
 
 .action-card-local button {
@@ -269,31 +331,31 @@ body {
 
 .action-icon {
   display: block;
-  font-size: 1.25rem;
-  color: rgba(80, 60, 40, 0.35);
-  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: rgba(31, 28, 23, 0.45);
+  margin-bottom: 0.15rem;
 }
 
 .action-card h2 {
-  margin: 0 0 0.35rem 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #3d2e1f;
+  margin: 0 0 0.2rem 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #1f1c17;
 }
 
 .action-desc {
-  margin: 0 0 1rem 0;
-  font-size: 0.85rem;
-  color: rgba(80, 60, 40, 0.65);
-  line-height: 1.4;
+  margin: 0 0 0.42rem 0;
+  font-size: 0.84rem;
+  color: rgba(31, 28, 23, 0.63);
+  line-height: 1.25;
 }
 
 .action-card input {
   display: block;
   width: 100%;
   max-width: 200px;
-  margin: 0 auto 0.75rem;
-  padding: 0.75rem 1rem;
+  margin: 0 auto 0.4rem;
+  padding: 0.58rem 0.8rem;
   font-size: 16px;
   text-align: center;
   letter-spacing: 0.15em;
@@ -314,19 +376,19 @@ body {
 }
 
 .action-card button {
-  min-height: 48px;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+  min-height: 40px;
+  padding: 0.58rem 1rem;
+  font-size: 0.92rem;
   font-weight: 600;
   border: none;
-  border-radius: 10px;
+  border-radius: 9px;
   cursor: pointer;
   touch-action: manipulation;
   transition: filter 0.15s, transform 0.1s;
 }
 
 .action-card-create button {
-  background: linear-gradient(135deg, #c45c4a, #b71c1c);
+  background: #b71c1c;
   color: #fff;
 }
 
@@ -336,7 +398,7 @@ body {
 }
 
 .action-card-join button {
-  background: linear-gradient(135deg, #2e7d32, #1b5e20);
+  background: #1b5e20;
   color: #fff;
 }
 
@@ -348,6 +410,52 @@ body {
 .action-card button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.p2p-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+}
+
+.p2p-create-btn,
+.p2p-join-btn {
+  background: #1b5e20;
+  color: #fff;
+}
+
+.p2p-create-btn {
+  width: fit-content;
+  align-self: center;
+}
+
+.p2p-create-btn:hover:not(:disabled),
+.p2p-create-btn:active:not(:disabled),
+.p2p-join-btn:hover:not(:disabled),
+.p2p-join-btn:active:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.p2p-join-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.p2p-join-row input {
+  max-width: none;
+  margin: 0;
+  text-align: left;
+  letter-spacing: 0.04em;
+  padding-left: 0.7rem;
+}
+
+.p2p-join-row .p2p-join-btn {
+  min-height: 38px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.86rem;
+  white-space: nowrap;
 }
 
 .game-screen {
@@ -483,8 +591,8 @@ body {
   left: 0;
   right: 0;
   text-align: center;
-  padding: 0.6rem 0.75rem;
-  padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
+  padding: 0.35rem 0.65rem;
+  padding-bottom: max(0.35rem, env(safe-area-inset-bottom));
   background: rgba(255, 255, 255, 0.5);
   border-top: 1px solid rgba(139, 115, 85, 0.15);
   backdrop-filter: blur(8px);
@@ -495,12 +603,12 @@ body {
 .bmc-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1rem;
-  font-size: 0.9rem;
+  gap: 0.38rem;
+  padding: 0.36rem 0.72rem;
+  font-size: 0.8rem;
   color: #6b5344;
   text-decoration: none;
-  border-radius: 10px;
+  border-radius: 9px;
   transition: all 0.2s ease;
   background: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(139, 115, 85, 0.2);
@@ -517,9 +625,116 @@ body {
 }
 
 .bmc-icon {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
 }
 
 .bmc-text {
   letter-spacing: 0.02em;
+}
+
+@media (max-height: 720px) {
+  .lobby {
+    padding-top: max(0.7rem, env(safe-area-inset-top));
+    padding-bottom: calc(2.95rem + env(safe-area-inset-bottom));
+  }
+
+  .lobby-hero {
+    margin-bottom: 0.45rem;
+  }
+
+  .lobby-badge {
+    font-size: 0.95rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .lobby-title {
+    font-size: 1.5rem;
+  }
+
+  .lobby-subtitle {
+    font-size: 0.78rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .hero-relation {
+    min-height: clamp(3.9rem, 33vw, 8.6rem);
+    margin-bottom: 0.24rem;
+  }
+
+  .hero-relation-pair {
+    max-width: min(calc(100vw - 2.4rem), 360px);
+    gap: 0.26rem;
+  }
+
+  .hero-relation-emoji {
+    font-size: clamp(2.55rem, 27vw, 6.6rem);
+  }
+
+  .hero-relation-symbol {
+    font-size: clamp(1.4rem, 6.8vw, 2.1rem);
+  }
+
+  .lobby-rules-link {
+    font-size: 0.8rem;
+  }
+
+  .lobby-actions {
+    gap: 0.42rem;
+  }
+
+  .action-card {
+    padding: 0.6rem 0.72rem;
+  }
+
+  .action-icon {
+    margin-bottom: 0.1rem;
+  }
+
+  .action-card h2 {
+    font-size: 0.94rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .action-desc {
+    font-size: 0.78rem;
+    margin-bottom: 0.32rem;
+  }
+
+  .action-card input {
+    padding: 0.5rem 0.72rem;
+    margin-bottom: 0.34rem;
+  }
+
+  .action-card button {
+    min-height: 36px;
+    font-size: 0.86rem;
+  }
+
+  .p2p-actions {
+    gap: 0.34rem;
+  }
+
+  .p2p-join-row {
+    gap: 0.32rem;
+  }
+
+  .p2p-join-row input {
+    padding: 0.46rem 0.62rem;
+  }
+
+  .p2p-join-row .p2p-join-btn {
+    min-height: 34px;
+    font-size: 0.8rem;
+    padding: 0.42rem 0.68rem;
+  }
+
+  .lobby-disclaimer {
+    margin-top: 0.12rem;
+    font-size: 0.62rem;
+  }
+
+  .action-card-p2p .lobby-disclaimer {
+    margin-top: 0.32rem;
+    font-size: 0.6rem;
+  }
 }
