@@ -39,8 +39,8 @@ function getPieceAt(G, r, c) {
 function effectiveRank(G, r, c, player) {
   const cell = getPieceAt(G, r, c)
   if (!cell || cell.player !== player) return cell?.piece ?? -1
-  // If my piece is in opponent's trap, rank becomes 0
-  if (isTrap(r, c, player === '0' ? '1' : '0')) return 0
+  // If my piece is in opponent's trap, rank becomes 0 (any enemy can capture, even mouse eats elephant)
+  if (isTrap(r, c, player)) return 0
   return cell.piece
 }
 
