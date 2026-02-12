@@ -5,38 +5,46 @@ import { P2P } from '@boardgame.io/p2p'
 import { JungleGame } from './Game'
 import { Board } from './Board'
 import { PIECE_EMOJIS } from './constants'
+import { checkServerHealth } from './utils/serverCheck'
 
 const APP_ID = 'jungle-chess-v1'
+const P2P_ERROR_EVENT = 'bgio-p2p-error'
 
 // Build PeerJS options from environment variable.
 // Set VITE_PEERJS_HOST to your deployed PeerJS server hostname
 // (e.g. "jungle-chess-peerjs.onrender.com").
 const peerjsHost = import.meta.env.VITE_PEERJS_HOST
+
+// Enhanced ICE servers list for better connectivity
+const iceServers = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:global.stun.twilio.com:3478' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun2.l.google.com:19302' },
+  { urls: 'stun:stun3.l.google.com:19302' },
+  { urls: 'stun:stun4.l.google.com:19302' },
+]
+
 const peerOptions = peerjsHost
   ? {
       host: peerjsHost,
       port: 443,
       secure: true,
       path: '/',
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478' },
-        ],
-      },
+      config: { iceServers },
     }
   : {
       // Fallback: use default PeerJS cloud (works locally)
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478' },
-        ],
-      },
+      config: { iceServers },
     }
 
-function Loading() {
-  return <div className="loading">連線中…</div>
+function Loading({ text = "連線中…" }) {
+  return <div className="loading">{text}</div>
+}
+
+const dispatchError = (e) => {
+  console.error('[P2P Error]', e)
+  window.dispatchEvent(new CustomEvent(P2P_ERROR_EVENT, { detail: e }))
 }
 
 const HostClient = Client({
@@ -45,7 +53,7 @@ const HostClient = Client({
   multiplayer: P2P({
     isHost: true,
     peerOptions,
-    onError: (e) => console.error('[P2P Host]', e),
+    onError: dispatchError,
   }),
   numPlayers: 2,
   loading: Loading,
@@ -57,7 +65,7 @@ const PeerClient = Client({
   board: Board,
   multiplayer: P2P({
     peerOptions,
-    onError: (e) => console.error('[P2P Peer]', e),
+    onError: dispatchError,
   }),
   numPlayers: 2,
   loading: Loading,
@@ -242,6 +250,49 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
   const ClientComponent = isHost ? HostClient : PeerClient
   const displayMatchID = matchID.replace(`${APP_ID}-`, '')
   const [rulesOpen, setRulesOpen] = useState(false)
+  const [serverStatus, setServerStatus] = useState(peerjsHost ? 'checking' : 'ready') // checking, ready, error
+  const [connectionError, setConnectionError] = useState(null)
+
+  useEffect(() => {
+    // 1. Check server health if using custom host
+    const checkServer = async () => {
+      if (!peerjsHost) return
+      
+      try {
+        const isHealthy = await checkServerHealth(`https://${peerjsHost}`)
+        if (isHealthy) {
+          setServerStatus('ready')
+        } else {
+          console.warn('Server check failed, but attempting connection anyway...')
+          setServerStatus('ready') // Proceed but maybe log
+        }
+      } catch (e) {
+        console.error(e)
+        setServerStatus('ready') // Fallback to try anyway
+      }
+    }
+
+    if (peerjsHost) {
+      checkServer()
+    }
+
+    // 2. Listen for P2P errors
+    const handleError = (event) => {
+      const error = event.detail
+      console.error('Caught P2P Error:', error)
+      
+      // Filter common noise errors if needed, or show all
+      let msg = '連線發生錯誤'
+      if (error.type === 'peer-unavailable') msg = '找不到對手或對手已離線'
+      if (error.type === 'network') msg = '網路連線不穩定'
+      if (error.type === 'server-error') msg = '伺服器連線失敗'
+      
+      setConnectionError(msg)
+    }
+
+    window.addEventListener(P2P_ERROR_EVENT, handleError)
+    return () => window.removeEventListener(P2P_ERROR_EVENT, handleError)
+  }, [])
 
   const shareUrl = getShareUrl(displayMatchID)
 
@@ -262,6 +313,39 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
 
   const handleCopyCode = () => {
     navigator.clipboard?.writeText(displayMatchID)
+  }
+
+  if (serverStatus === 'checking') {
+    return (
+      <div className="game-screen">
+         <header className={`game-header player-${playerID}`}>
+          <button type="button" className="back" onClick={onBack}>
+            ← 返回
+          </button>
+        </header>
+        <Loading text="正在喚醒伺服器..." />
+      </div>
+    )
+  }
+
+  if (connectionError) {
+    return (
+      <div className="game-screen">
+        <header className={`game-header player-${playerID}`}>
+          <button type="button" className="back" onClick={onBack}>
+            ← 返回
+          </button>
+        </header>
+        <div className="lobby" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '50vh' }}>
+          <div className="action-card">
+             <span className="action-icon">⚠</span>
+             <h2>連線錯誤</h2>
+             <p>{connectionError}</p>
+             <button onClick={() => window.location.reload()}>重試</button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
