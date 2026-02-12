@@ -635,21 +635,6 @@ body {
   color: rgba(31, 28, 23, 0.75);
 }
 
-.p2p-host-guide-actions {
-  display: flex;
-  gap: 0.45rem;
-  margin-top: 0.5rem;
-}
-
-.p2p-host-guide-actions button {
-  border: none;
-  border-radius: 8px;
-  padding: 0.45rem 0.65rem;
-  background: #2e7d32;
-  color: #fff;
-  font-size: 0.82rem;
-  font-weight: 600;
-}
 
 .p2p-copy-feedback {
   margin-top: 0.42rem;

@@ -547,12 +547,8 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
       {isHost && !opponentConnected && (
         <section className="p2p-host-guide">
           <h3>邀請對手加入</h3>
-          <p>1. 按「分享」或「複製連結」傳給對手。</p>
+          <p>1. 按「分享」或「複製代碼」傳給對手。</p>
           <p>2. 對手加入後，狀態會更新為「對手已加入」。</p>
-          <div className="p2p-host-guide-actions">
-            <button type="button" onClick={handleCopyCode}>複製代碼</button>
-            <button type="button" onClick={handleCopyLink}>複製連結</button>
-          </div>
           {copyFeedback && <p className="p2p-copy-feedback">{copyFeedback}</p>}
         </section>
       )}
