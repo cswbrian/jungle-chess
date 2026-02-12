@@ -137,6 +137,22 @@ function RulesButton({ onClick }) {
   )
 }
 
+function BuyMeCoffeeFooter() {
+  return (
+    <footer className="bmc-footer">
+      <a 
+        href="https://buymeacoffee.com/coolsunwind" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="bmc-link"
+      >
+        <span className="bmc-icon">☕</span>
+        <span className="bmc-text">Buy me a coffee</span>
+      </a>
+    </footer>
+  )
+}
+
 function parseCodeInput(input) {
   const trimmed = input.trim().toLowerCase()
   const codeMatch = trimmed.match(/[?&]code=([a-z0-9]+)/)
@@ -215,6 +231,7 @@ function Lobby({ onCreate, onJoin, onLocal }) {
       </div>
       <p className="lobby-footer">1 vs 1 · 同機 或 P2P 對戰 · 無需註冊</p>
       <p className="lobby-disclaimer">同機對戰會自動儲存進度，P2P 對戰則會在重新整理後消失</p>
+      <BuyMeCoffeeFooter />
     </div>
   )
 }
@@ -245,6 +262,7 @@ function LocalGameScreen({ matchID, onBack, onRestart }) {
         playerID={viewingPlayer}
         onTurnChange={setViewingPlayer}
       />
+      <BuyMeCoffeeFooter />
     </div>
   )
 }
@@ -327,6 +345,7 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
           </button>
         </header>
         <Loading text="正在喚醒伺服器..." />
+        <BuyMeCoffeeFooter />
       </div>
     )
   }
@@ -347,6 +366,7 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
              <button onClick={() => window.location.reload()}>重試</button>
           </div>
         </div>
+        <BuyMeCoffeeFooter />
       </div>
     )
   }
@@ -372,6 +392,7 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
         <RulesButton onClick={() => setRulesOpen(true)} />
       </header>
       <ClientComponent matchID={matchID} playerID={playerID} />
+      <BuyMeCoffeeFooter />
     </div>
   )
 }
