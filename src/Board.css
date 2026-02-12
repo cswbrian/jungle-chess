@@ -93,13 +93,194 @@
   font-weight: 600;
 }
 
-.gameover {
-  margin-bottom: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: #1a472a;
-  color: #fff;
-  border-radius: 8px;
+/* Winner celebration overlay */
+.gameover-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  animation: overlay-fade-in 0.4s ease-out;
+}
+
+@keyframes overlay-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.gameover-card {
+  background: white;
+  border-radius: 20px;
+  padding: 3rem 2.5rem;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: card-pop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  max-width: 90vw;
+  position: relative;
+  overflow: hidden;
+}
+
+.close-overlay-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.close-overlay-btn:hover,
+.close-overlay-btn:active {
+  background: rgba(0, 0, 0, 0.2);
+  transform: scale(1.1);
+  color: #333;
+}
+
+.gameover-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.5) 50%,
+    transparent 70%
+  );
+  animation: shine 3s ease-in-out infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+@keyframes card-pop {
+  0% {
+    transform: scale(0.5) rotate(-5deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.winner-trophy {
+  font-size: clamp(5rem, 18vw, 8rem);
+  line-height: 1;
+  margin-bottom: 1rem;
+  animation: trophy-bounce 1s ease-in-out infinite;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 193, 7, 0.1));
+  border-radius: 50%;
+  border: 4px solid rgba(255, 193, 7, 0.3);
+}
+
+@keyframes trophy-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1) rotate(-5deg);
+  }
+  25% {
+    transform: translateY(-15px) scale(1.05) rotate(5deg);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.1) rotate(-5deg);
+  }
+  75% {
+    transform: translateY(-15px) scale(1.05) rotate(5deg);
+  }
+}
+
+.winner-title {
+  font-size: clamp(2rem, 8vw, 3rem);
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+  position: relative;
+  z-index: 1;
+}
+
+.winner-subtitle {
+  font-size: clamp(1.2rem, 4vw, 1.5rem);
   font-weight: 600;
+  opacity: 0.8;
+  position: relative;
+  z-index: 1;
+}
+
+.gameover-overlay.winner-p0 .winner-title,
+.gameover-overlay.winner-p0 .winner-subtitle {
+  color: #d32f2f;
+}
+
+.gameover-overlay.winner-p1 .winner-title,
+.gameover-overlay.winner-p1 .winner-subtitle {
+  color: #2e7d32;
+}
+
+/* Confetti animation */
+.gameover-overlay::before,
+.gameover-overlay::after {
+  content: '🎉';
+  position: absolute;
+  font-size: 3rem;
+  animation: confetti-fall 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.gameover-overlay::before {
+  top: -10%;
+  left: 20%;
+  animation-delay: 0.5s;
+}
+
+.gameover-overlay::after {
+  top: -10%;
+  right: 20%;
+  animation-delay: 1s;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120vh) rotate(720deg);
+    opacity: 0;
+  }
 }
 
 /* Board: 7x9 grid, square cells. Maximize size on mobile. */

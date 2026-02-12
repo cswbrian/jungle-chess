@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getLegalMoves } from './Game'
 import { isRiver, isTrap, isDen, PIECE_NAMES, PIECE_EMOJIS, ROWS, COLS, DEN_0, DEN_1 } from './constants'
 import './Board.css'
@@ -48,6 +48,7 @@ function Cell({ r, c, cell, isSelected, isLegalMove, legalMovePlayer, isLastMove
 
 export function Board({ G, ctx, moves, playerID }) {
   const [selected, setSelected] = useState(null)
+  const [showWinnerOverlay, setShowWinnerOverlay] = useState(false)
   const currentPlayer = ctx.currentPlayer
   const isMyTurn = currentPlayer === playerID
   const gameover = ctx.gameover
@@ -111,11 +112,37 @@ export function Board({ G, ctx, moves, playerID }) {
     return `${playerColor}方剛${action}${suffix}`
   })() : null
 
+  // Show overlay when game ends
+  useEffect(() => {
+    if (gameover) {
+      setShowWinnerOverlay(true)
+    }
+  }, [gameover])
+
+  const winnerColor = gameover?.winner === '0' ? '紅' : '綠'
+  const winnerClass = gameover?.winner === '0' ? 'winner-p0' : 'winner-p1'
+  
+  // Get the winning piece from lastMove
+  const winningPieceEmoji = G.lastMove ? PIECE_EMOJIS[G.lastMove.piece] : '🏆'
+  const winningPieceName = G.lastMove ? PIECE_NAMES[G.lastMove.piece] : ''
+
   return (
     <div className="board-wrap">
-      {gameover && (
-        <div className="gameover">
-          獲勝：{gameover.winner === playerID ? '你' : '對手'}
+      {gameover && showWinnerOverlay && (
+        <div className={`gameover-overlay ${winnerClass}`}>
+          <div className="gameover-card">
+            <button 
+              type="button" 
+              className="close-overlay-btn" 
+              onClick={() => setShowWinnerOverlay(false)}
+              aria-label="關閉"
+            >
+              ✕
+            </button>
+            <div className="winner-trophy">{winningPieceEmoji}</div>
+            <div className="winner-title">{winnerColor}方獲勝！</div>
+            <div className="winner-subtitle">{winningPieceEmoji}{winningPieceName}攻陷對方獸穴</div>
+          </div>
         </div>
       )}
       <div
