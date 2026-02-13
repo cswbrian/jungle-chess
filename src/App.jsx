@@ -600,6 +600,10 @@ export default function App() {
   const [onlineBusy, setOnlineBusy] = useState(false)
   const [onlineError, setOnlineError] = useState('')
 
+  const confirmBackToLobby = useCallback(() => {
+    return window.confirm('確定要返回嗎？目前連線將會中斷。')
+  }, [])
+
   const startLocalGame = () => {
     let id = localStorage.getItem('jungle-chess-local-match')
     if (!id) {
@@ -676,7 +680,10 @@ export default function App() {
     return (
       <LocalGameScreen
         matchID={game.localMatchID}
-        onBack={() => setGame(null)}
+        onBack={() => {
+          if (!confirmBackToLobby()) return
+          setGame(null)
+        }}
         onRestart={restartLocalGame}
       />
     )
@@ -690,6 +697,7 @@ export default function App() {
         credentials={game.credentials}
         isHost={game.isHost}
         onBack={async () => {
+          if (!confirmBackToLobby()) return
           try {
             await leaveOnlineSession(game)
           } catch (error) {
