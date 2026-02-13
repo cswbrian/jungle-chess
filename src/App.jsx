@@ -363,7 +363,7 @@ function Lobby({ onCreate, onJoin, onLocal, hasLocalGame, onlineBusy, onlineActi
             </div>
           </div>
           <div className="action-card-body">
-            <button type="button" onClick={onLocal}>
+            <button type="button" className="action-primary-btn" onClick={onLocal}>
               {hasLocalGame ? '繼續遊戲' : '開始'}
             </button>
           </div>
