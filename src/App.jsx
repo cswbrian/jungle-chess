@@ -341,7 +341,7 @@ function Lobby({ onCreate, onJoin, onLocal, hasLocalGame, onlineBusy, onlineActi
         <div className="action-card action-card-local">
           <span className="action-icon" aria-hidden>◉</span>
           <h2>同機對戰</h2>
-          <p className="action-desc">兩人共用一台裝置輪流下棋</p>
+          <p className="action-desc">兩人共用同一台裝置輪流下棋</p>
           <button type="button" onClick={onLocal}>
             {hasLocalGame ? '繼續遊戲' : '開始'}
           </button>
@@ -349,7 +349,7 @@ function Lobby({ onCreate, onJoin, onLocal, hasLocalGame, onlineBusy, onlineActi
         <div className="action-card action-card-p2p">
           <span className="action-icon" aria-hidden>✦</span>
           <h2>線上對戰</h2>
-          <p className="action-desc">可開新局分享代碼，或輸入代碼加入朋友棋局</p>
+          <p className="action-desc">開新局分享代碼，或輸入代碼加入朋友棋局</p>
           <div className="p2p-actions">
             <button
               type="button"
@@ -383,9 +383,8 @@ function Lobby({ onCreate, onJoin, onLocal, hasLocalGame, onlineBusy, onlineActi
             </div>
           </div>
           {onlineAction === 'creating' && (
-            <p className="lobby-wakeup-tip">正在喚醒伺服器，免費方案約需 20-90 秒，請稍候。</p>
+            <p className="lobby-wakeup-tip">正在喚醒伺服器，約需20~90秒。</p>
           )}
-          <p className="lobby-disclaimer">線上對戰改為伺服器同步：重新整理會嘗試續接棋局（伺服器在線時）。</p>
           {onlineError && <p className="lobby-disclaimer">{onlineError}</p>}
         </div>
       </div>
