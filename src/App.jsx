@@ -59,7 +59,7 @@ function generateMatchID() {
 
 const RULES_CONTENT = [
   { title: '移動與吃子', text: '前後左右一格。大吃小，同級互吃。' },
-  { title: '階級', text: '🐘象 > 🦁獅 > 🐯虎 > 🐆豹 > 🐺狼 > 🐕狗 > 🐱貓 > 🐀鼠' },
+  { title: '階級', text: '🐘象 > 🦁獅 > 🐯虎 > 🐆豹 > 🐕狗 > 🐺狼 > 🐱貓 > 🐀鼠' },
   { title: '鼠吃象', text: '🐀鼠可吃🐘象，🐘象不能吃🐀鼠。' },
   { title: '河', text: '🦁獅🐯虎可跳河。河有🐀鼠則不能跳。🐀鼠可下水，水中無敵。' },
   { title: '陷阱', text: '敵入我方陷阱，任我方可吃。' },

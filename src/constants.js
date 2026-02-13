@@ -87,8 +87,8 @@ export function getRiverJump(r, c, dr, dc) {
 // Initial piece positions [row, col] for each player.
 // Order: Lion, Tiger, Leopard, Elephant, Rat, Cat, Wolf, Dog
 export const INITIAL_0 = [
-  [0, 0], [0, 6], [2, 2], [2, 6], [2, 0], [1, 5], [1, 1], [2, 4]
+  [0, 6], [0, 0], [2, 4], [2, 0], [2, 6], [1, 1], [2, 2], [1, 5]
 ]
 export const INITIAL_1 = [
-  [8, 6], [8, 0], [6, 4], [6, 0], [6, 6], [7, 1], [7, 5], [6, 2]
+  [8, 0], [8, 6], [6, 2], [6, 6], [6, 0], [7, 5], [6, 4], [7, 1]
 ]

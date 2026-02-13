@@ -13,7 +13,7 @@ import {
 } from './constants.js'
 
 // Piece order for initial setup
-const PIECE_ORDER = [RANK.LION, RANK.TIGER, RANK.LEOPARD, RANK.ELEPHANT, RANK.RAT, RANK.CAT, RANK.DOG, RANK.WOLF]
+const PIECE_ORDER = [RANK.LION, RANK.TIGER, RANK.LEOPARD, RANK.ELEPHANT, RANK.RAT, RANK.CAT, RANK.WOLF, RANK.DOG]
 
 function createEmptyGrid() {
   return Array.from({ length: ROWS }, () => Array(COLS).fill(null))
