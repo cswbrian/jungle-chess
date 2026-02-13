@@ -729,7 +729,6 @@ function GameScreen({ matchID, playerID, credentials, isHost, restartToken = 0, 
       {showInitialHostGuide ? (
         <section className="p2p-host-guide p2p-host-guide-combined">
           <h3>邀請對手加入</h3>
-          <p className="p2p-host-status">{statusText}</p>
           <p>
             1. 分享
             <button type="button" className="p2p-host-link" onClick={handleShare}>
