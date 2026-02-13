@@ -3,7 +3,13 @@ import { JungleGame } from '../src/Game.js'
 
 const require = createRequire(import.meta.url)
 const { Server, Origins } = require('boardgame.io/server')
-const { koaBody } = require('koa-body')
+const koaBodyModule = require('koa-body')
+const koaBody = typeof koaBodyModule === 'function'
+  ? koaBodyModule
+  : (koaBodyModule?.koaBody || koaBodyModule?.default)
+if (typeof koaBody !== 'function') {
+  throw new Error('koa-body middleware loader failed')
+}
 
 const APP_ID = 'jungle-chess-v1'
 const PORT = Number(process.env.PORT || 8000)
