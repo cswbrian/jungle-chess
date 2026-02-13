@@ -281,9 +281,9 @@ body {
 .lobby-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.52rem;
-  flex: 1;
-  justify-content: center;
+  gap: 0.76rem;
+  flex: 0 0 auto;
+  margin-top: 0.56rem;
   min-height: 0;
 }
 
@@ -292,23 +292,34 @@ body {
 }
 
 .action-card {
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.94), rgba(246, 240, 230, 0.95));
   border-radius: 12px;
-  padding: 0.72rem 0.8rem;
-  text-align: center;
-  border: 2px solid rgba(31, 28, 23, 0.17);
-  box-shadow: none;
+  padding: 0.82rem 0.92rem;
+  text-align: left;
+  border: 2px solid rgba(55, 40, 24, 0.24);
+  box-shadow: 0 2px 0 rgba(43, 31, 19, 0.12);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.52rem;
 }
 
 .action-card::before {
+  content: none;
+}
+
+.action-card::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 22%, rgba(60, 48, 31, 0.07) 0, rgba(60, 48, 31, 0.07) 1px, transparent 1px),
+    radial-gradient(circle at 78% 72%, rgba(60, 48, 31, 0.06) 0, rgba(60, 48, 31, 0.06) 1px, transparent 1px);
+  background-size: 10px 10px, 14px 14px;
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .action-card-create::before {
@@ -337,33 +348,61 @@ body {
   filter: brightness(1.08);
 }
 
-.action-icon {
+.action-head {
   display: block;
-  font-size: 1rem;
-  color: rgba(31, 28, 23, 0.45);
-  margin-bottom: 0.15rem;
+  position: relative;
+  z-index: 1;
+}
+
+.action-head-copy {
+  min-width: 0;
+}
+
+.action-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-bottom: 0.12rem;
+}
+
+.action-tag {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid rgba(31, 28, 23, 0.2);
+  color: rgba(31, 28, 23, 0.7);
+  border-radius: 999px;
+  padding: 0.08rem 0.34rem;
+  white-space: nowrap;
+}
+
+.action-card-body {
+  position: relative;
+  z-index: 1;
 }
 
 .action-card h2 {
-  margin: 0 0 0.2rem 0;
-  font-size: 1.02rem;
+  margin: 0;
+  font-size: 0.96rem;
   font-weight: 800;
   color: #1f1c17;
 }
 
 .action-desc {
-  margin: 0 0 0.42rem 0;
-  font-size: 0.84rem;
+  margin: 0;
+  font-size: 0.78rem;
   color: rgba(31, 28, 23, 0.63);
-  line-height: 1.25;
+  line-height: 1.22;
 }
 
 .action-card input {
   display: block;
   width: 100%;
   max-width: 200px;
-  margin: 0 auto 0.4rem;
-  padding: 0.58rem 0.8rem;
+  margin: 0 auto 0.28rem;
+  padding: 0.48rem 0.66rem;
   font-size: 16px;
   text-align: center;
   letter-spacing: 0.15em;
@@ -384,10 +423,10 @@ body {
 }
 
 .action-card button {
-  min-height: 40px;
-  padding: 0.58rem 1rem;
-  font-size: 0.92rem;
-  font-weight: 600;
+  min-height: 35px;
+  padding: 0.46rem 0.82rem;
+  font-size: 0.86rem;
+  font-weight: 700;
   border: none;
   border-radius: 9px;
   cursor: pointer;
@@ -433,8 +472,7 @@ body {
 }
 
 .p2p-create-btn {
-  width: fit-content;
-  align-self: center;
+  width: 100%;
 }
 
 .p2p-create-btn:hover:not(:disabled),
@@ -446,8 +484,8 @@ body {
 
 .p2p-join-row {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.4rem;
+  grid-template-columns: 1fr minmax(88px, auto);
+  gap: 0.3rem;
   align-items: center;
 }
 
@@ -460,9 +498,9 @@ body {
 }
 
 .p2p-join-row .p2p-join-btn {
-  min-height: 38px;
-  padding: 0.5rem 0.8rem;
-  font-size: 0.86rem;
+  min-height: 34px;
+  padding: 0.42rem 0.64rem;
+  font-size: 0.8rem;
   white-space: nowrap;
 }
 
@@ -767,35 +805,40 @@ body {
   }
 
   .lobby-actions {
-    gap: 0.42rem;
+    gap: 0.56rem;
+    margin-top: 0.44rem;
   }
 
   .action-card {
-    padding: 0.6rem 0.72rem;
+    padding: 0.66rem 0.76rem;
+    gap: 0.44rem;
   }
 
-  .action-icon {
-    margin-bottom: 0.1rem;
+  .action-head {
+    display: block;
   }
 
   .action-card h2 {
-    font-size: 0.94rem;
-    margin-bottom: 0.15rem;
+    font-size: 0.9rem;
+  }
+
+  .action-tag {
+    font-size: 0.52rem;
+    padding: 0.06rem 0.28rem;
   }
 
   .action-desc {
-    font-size: 0.78rem;
-    margin-bottom: 0.32rem;
+    font-size: 0.74rem;
   }
 
   .action-card input {
-    padding: 0.5rem 0.72rem;
-    margin-bottom: 0.34rem;
+    padding: 0.42rem 0.58rem;
+    margin-bottom: 0.22rem;
   }
 
   .action-card button {
-    min-height: 36px;
-    font-size: 0.86rem;
+    min-height: 33px;
+    font-size: 0.8rem;
   }
 
   .p2p-actions {
@@ -803,17 +846,17 @@ body {
   }
 
   .p2p-join-row {
-    gap: 0.32rem;
+    gap: 0.26rem;
   }
 
   .p2p-join-row input {
-    padding: 0.46rem 0.62rem;
+    padding: 0.38rem 0.5rem;
   }
 
   .p2p-join-row .p2p-join-btn {
-    min-height: 34px;
-    font-size: 0.8rem;
-    padding: 0.42rem 0.68rem;
+    min-height: 32px;
+    font-size: 0.76rem;
+    padding: 0.34rem 0.56rem;
   }
 
   .lobby-disclaimer {

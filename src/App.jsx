@@ -340,53 +340,69 @@ function Lobby({ onCreate, onJoin, onLocal, hasLocalGame, onlineBusy, onlineActi
       <RulesModal open={rulesOpen} onClose={() => setRulesOpen(false)} />
       <div className="lobby-actions">
         <div className="action-card action-card-local">
-          <span className="action-icon" aria-hidden>◉</span>
-          <h2>同機對戰</h2>
-          <p className="action-desc">兩人共用同一台裝置輪流下棋</p>
-          <button type="button" onClick={onLocal}>
-            {hasLocalGame ? '繼續遊戲' : '開始'}
-          </button>
-        </div>
-        <div className="action-card action-card-p2p">
-          <span className="action-icon" aria-hidden>✦</span>
-          <h2>線上對戰</h2>
-          <p className="action-desc">開新局分享代碼，或輸入代碼加入朋友棋局</p>
-          <div className="p2p-actions">
-            <button
-              type="button"
-              className="p2p-create-btn"
-              onClick={onCreate}
-              disabled={onlineBusy}
-            >
-              {onlineAction === 'creating'
-                ? '喚醒伺服器中…'
-                : onlineAction === 'joining'
-                  ? '加入中…'
-                  : '開新局'}
-            </button>
-            <div className="p2p-join-row">
-              <input
-                type="text"
-                placeholder="輸入代碼或貼上連結"
-                value={matchID}
-                onChange={(e) => setMatchID(e.target.value)}
-                maxLength={200}
-                disabled={onlineBusy}
-              />
-              <button
-                type="button"
-                className="p2p-join-btn"
-                onClick={handleJoin}
-                disabled={onlineBusy || !parseCodeInput(matchID)}
-              >
-                加入棋局
-              </button>
+          <div className="action-head">
+            <div className="action-head-copy">
+              <div className="action-heading-row">
+                <h2>同機對戰</h2>
+                <span className="action-tag">LOCAL</span>
+              </div>
+              <p className="action-desc">兩人共用同一台裝置輪流下棋</p>
             </div>
           </div>
-          {onlineAction === 'creating' && (
-            <p className="lobby-wakeup-tip">正在喚醒伺服器，約需20~90秒。</p>
-          )}
-          {onlineError && <p className="lobby-disclaimer">{onlineError}</p>}
+          <div className="action-card-body">
+            <button type="button" onClick={onLocal}>
+              {hasLocalGame ? '繼續遊戲' : '開始'}
+            </button>
+          </div>
+        </div>
+        <div className="action-card action-card-p2p">
+          <div className="action-head">
+            <div className="action-head-copy">
+              <div className="action-heading-row">
+                <h2>線上對戰</h2>
+                <span className="action-tag">ONLINE</span>
+              </div>
+              <p className="action-desc">開新局分享代碼，或輸入代碼加入朋友棋局</p>
+            </div>
+          </div>
+          <div className="action-card-body">
+            <div className="p2p-actions">
+              <button
+                type="button"
+                className="p2p-create-btn"
+                onClick={onCreate}
+                disabled={onlineBusy}
+              >
+                {onlineAction === 'creating'
+                  ? '喚醒伺服器中…'
+                  : onlineAction === 'joining'
+                    ? '加入中…'
+                    : '開新局'}
+              </button>
+              <div className="p2p-join-row">
+                <input
+                  type="text"
+                  placeholder="輸入代碼或貼上連結"
+                  value={matchID}
+                  onChange={(e) => setMatchID(e.target.value)}
+                  maxLength={200}
+                  disabled={onlineBusy}
+                />
+                <button
+                  type="button"
+                  className="p2p-join-btn"
+                  onClick={handleJoin}
+                  disabled={onlineBusy || !parseCodeInput(matchID)}
+                >
+                  加入棋局
+                </button>
+              </div>
+            </div>
+            {onlineAction === 'creating' && (
+              <p className="lobby-wakeup-tip">正在喚醒伺服器，約需20~90秒。</p>
+            )}
+            {onlineError && <p className="lobby-disclaimer">{onlineError}</p>}
+          </div>
         </div>
       </div>
       <BuyMeCoffeeFooter />
