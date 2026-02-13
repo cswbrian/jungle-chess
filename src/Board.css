@@ -323,6 +323,7 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 900;
+  pointer-events: none;
   background: white;
   border-radius: 16px;
   padding: 1.5rem 2rem;
