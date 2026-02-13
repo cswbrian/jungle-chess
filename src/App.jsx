@@ -314,7 +314,7 @@ function clearOnlineSession() {
   localStorage.removeItem(ONLINE_SESSION_KEY)
 }
 
-function Lobby({ onCreate, onJoin, onLocal, hasLocalGame, onlineBusy, onlineError }) {
+function Lobby({ onCreate, onJoin, onLocal, hasLocalGame, onlineBusy, onlineAction, onlineError }) {
   const [matchID, setMatchID] = useState('')
   const [rulesOpen, setRulesOpen] = useState(false)
 
@@ -357,7 +357,11 @@ function Lobby({ onCreate, onJoin, onLocal, hasLocalGame, onlineBusy, onlineErro
               onClick={onCreate}
               disabled={onlineBusy}
             >
-              {onlineBusy ? '連線中…' : '開新局'}
+              {onlineAction === 'creating'
+                ? '喚醒伺服器中…'
+                : onlineAction === 'joining'
+                  ? '加入中…'
+                  : '開新局'}
             </button>
             <div className="p2p-join-row">
               <input
@@ -378,6 +382,9 @@ function Lobby({ onCreate, onJoin, onLocal, hasLocalGame, onlineBusy, onlineErro
               </button>
             </div>
           </div>
+          {onlineAction === 'creating' && (
+            <p className="lobby-wakeup-tip">正在喚醒伺服器，免費方案約需 20-90 秒，請稍候。</p>
+          )}
           <p className="lobby-disclaimer">線上對戰改為伺服器同步：重新整理會嘗試續接棋局（伺服器在線時）。</p>
           {onlineError && <p className="lobby-disclaimer">{onlineError}</p>}
         </div>
@@ -598,6 +605,7 @@ function getJoinCodeFromUrl() {
 export default function App() {
   const [game, setGame] = useState(null)
   const [onlineBusy, setOnlineBusy] = useState(false)
+  const [onlineAction, setOnlineAction] = useState('idle')
   const [onlineError, setOnlineError] = useState('')
 
   const confirmBackToLobby = useCallback(() => {
@@ -623,6 +631,7 @@ export default function App() {
 
   const startOnlineGame = useCallback(async () => {
     setOnlineBusy(true)
+    setOnlineAction('creating')
     setOnlineError('')
     try {
       const session = await createOnlineSession()
@@ -633,11 +642,13 @@ export default function App() {
       setOnlineError('建立棋局失敗，伺服器可能仍在喚醒，請稍後重試。')
     } finally {
       setOnlineBusy(false)
+      setOnlineAction('idle')
     }
   }, [])
 
   const joinOnlineGame = useCallback(async (code) => {
     setOnlineBusy(true)
+    setOnlineAction('joining')
     setOnlineError('')
     try {
       const normalized = String(code || '').trim().toLowerCase().slice(0, 8)
@@ -650,6 +661,7 @@ export default function App() {
       setOnlineError('加入失敗：請確認代碼正確，或稍後重試。')
     } finally {
       setOnlineBusy(false)
+      setOnlineAction('idle')
     }
   }, [])
 
@@ -737,6 +749,7 @@ export default function App() {
       onLocal={startLocalGame}
       hasLocalGame={hasLocalGame}
       onlineBusy={onlineBusy}
+      onlineAction={onlineAction}
       onlineError={onlineError}
     />
   )

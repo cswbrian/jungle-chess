@@ -146,6 +146,14 @@ body {
   font-size: 0.66rem;
 }
 
+.lobby-wakeup-tip {
+  margin: 0.45rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #7b5a38;
+  line-height: 1.35;
+}
+
 /* Legacy rules-btn (used in game header) */
 .rules-btn {
   min-width: 44px;
