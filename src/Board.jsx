@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getLegalMoves } from './Game'
 import { isRiver, isTrap, isDen, PIECE_NAMES, PIECE_EMOJIS, ROWS, COLS, DEN_0, DEN_1 } from './constants'
+import { trackEvent } from './utils/analytics'
 import './Board.css'
 
 function Cell({ r, c, cell, isSelected, isLegalMove, legalMovePlayer, isLastMoveFrom, isLastMoveTo, onClick }) {
@@ -46,10 +47,12 @@ function Cell({ r, c, cell, isSelected, isLegalMove, legalMovePlayer, isLastMove
   )
 }
 
-export function Board({ G, ctx, moves, playerID }) {
+export function Board({ G, ctx, moves, playerID, gameMode = 'unknown' }) {
   const [selected, setSelected] = useState(null)
   const [showWinnerOverlay, setShowWinnerOverlay] = useState(false)
   const [eventNotification, setEventNotification] = useState(null)
+  const lastTrackedMoveRef = useRef('')
+  const gameEndTrackedRef = useRef(false)
   const currentPlayer = ctx.currentPlayer
   const isMyTurn = currentPlayer === playerID
   const gameover = ctx.gameover
@@ -169,6 +172,48 @@ export function Board({ G, ctx, moves, playerID }) {
       return () => clearTimeout(timer)
     }
   }, [G.lastMove, gameover])
+
+  useEffect(() => {
+    if (!G?.lastMove) return
+    const moveKey = [
+      ctx?.turn,
+      G.lastMove.player,
+      G.lastMove.piece,
+      G.lastMove.from?.r,
+      G.lastMove.from?.c,
+      G.lastMove.to?.r,
+      G.lastMove.to?.c,
+    ].join(':')
+    if (lastTrackedMoveRef.current === moveKey) return
+    lastTrackedMoveRef.current = moveKey
+
+    trackEvent('game_move', {
+      mode: gameMode,
+      turn: Number(ctx?.turn || 0),
+      player: String(G.lastMove.player),
+      piece: Number(G.lastMove.piece),
+      captured: Boolean(G.lastMove.captured),
+      is_river_jump: Boolean(G.lastMove.isRiverJump),
+      entered_trap: Boolean(G.lastMove.enteredTrap),
+    })
+  }, [G?.lastMove, ctx?.turn, gameMode])
+
+  useEffect(() => {
+    if (!gameover) {
+      gameEndTrackedRef.current = false
+      return
+    }
+    if (gameEndTrackedRef.current) return
+    gameEndTrackedRef.current = true
+
+    const endReason = G?.lastMove?.captured ? 'all_pieces_eliminated_or_capture_sequence' : 'den_occupied'
+    trackEvent('game_end', {
+      mode: gameMode,
+      winner: String(gameover.winner),
+      turn: Number(ctx?.turn || 0),
+      end_reason: endReason,
+    })
+  }, [G?.lastMove, ctx?.turn, gameMode, gameover])
 
   const winnerColor = gameover?.winner === '0' ? '紅' : '綠'
   const winnerClass = gameover?.winner === '0' ? 'winner-p0' : 'winner-p1'

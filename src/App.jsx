@@ -6,6 +6,7 @@ import { JungleGame } from './Game'
 import { Board } from './Board'
 import { PIECE_EMOJIS } from './constants'
 import { checkServerHealth } from './utils/serverCheck'
+import { trackEvent } from './utils/analytics'
 
 const APP_ID = 'jungle-chess-v1'
 const ONLINE_SESSION_KEY = 'jungle-chess-online-session'
@@ -40,7 +41,7 @@ function LocalBoardWrapper(props) {
       onTurnChange(ctx.currentPlayer)
     }
   }, [ctx?.currentPlayer, onTurnChange])
-  return <Board {...props} playerID={ctx?.currentPlayer ?? '0'} />
+  return <Board {...props} playerID={ctx?.currentPlayer ?? '0'} gameMode="local" />
 }
 
 const LocalClient = Client({
@@ -210,7 +211,7 @@ function OnlineBoardWrapper(props) {
     })
   }, [isConnected, matchData, onConnectionStateChange, playerID])
 
-  return <Board {...props} />
+  return <Board {...props} gameMode="online" />
 }
 
 function getApiBaseUrl() {
@@ -500,6 +501,7 @@ function GameScreen({ matchID, playerID, credentials, isHost, onBack }) {
           title: '鬥獸棋',
           text: `加入我的鬥獸棋棋局，代碼：${displayMatchID}\n\n${shareUrl}`,
         })
+        trackEvent('native_share_used', { mode: 'online', is_host: Boolean(isHost) })
         return
       } catch (e) {
         if (e.name === 'AbortError') return
@@ -507,16 +509,19 @@ function GameScreen({ matchID, playerID, credentials, isHost, onBack }) {
     }
     navigator.clipboard?.writeText(shareUrl)
     setCopyFeedback('已複製連結')
+    trackEvent('share_link_clicked', { mode: 'online', is_host: Boolean(isHost), method: 'clipboard_fallback' })
   }
 
   const handleCopyCode = () => {
     navigator.clipboard?.writeText(displayMatchID)
     setCopyFeedback('已複製代碼')
+    trackEvent('share_code_clicked', { mode: 'online', is_host: Boolean(isHost) })
   }
 
   const handleCopyLink = () => {
     navigator.clipboard?.writeText(shareUrl)
     setCopyFeedback('已複製連結')
+    trackEvent('share_link_clicked', { mode: 'online', is_host: Boolean(isHost), method: 'copy_button' })
   }
 
   if (serverStatus === 'checking') {
@@ -613,10 +618,12 @@ export default function App() {
 
   const startLocalGame = () => {
     let id = localStorage.getItem('jungle-chess-local-match')
+    const resumed = Boolean(id)
     if (!id) {
       id = `local-${generateMatchID()}`
       localStorage.setItem('jungle-chess-local-match', id)
     }
+    trackEvent('lobby_local_start', { resumed })
     setGame({ isLocal: true, localMatchID: id })
   }
 
@@ -625,6 +632,7 @@ export default function App() {
     
     const id = `local-${generateMatchID()}`
     localStorage.setItem('jungle-chess-local-match', id)
+    trackEvent('local_restart_confirmed')
     setGame({ isLocal: true, localMatchID: id })
   }
 
@@ -632,12 +640,15 @@ export default function App() {
     setOnlineBusy(true)
     setOnlineAction('creating')
     setOnlineError('')
+    trackEvent('online_create_attempt')
     try {
       const session = await createOnlineSession()
       saveOnlineSession(session)
+      trackEvent('online_create_success')
       setGame(session)
     } catch (error) {
       console.error(error)
+      trackEvent('online_create_failed')
       setOnlineError('建立棋局失敗，伺服器可能仍在喚醒，請稍後重試。')
     } finally {
       setOnlineBusy(false)
@@ -652,11 +663,14 @@ export default function App() {
     try {
       const normalized = String(code || '').trim().toLowerCase().slice(0, 8)
       if (!normalized) return
+      trackEvent('online_join_attempt')
       const session = await joinOnlineSession(normalized)
       saveOnlineSession(session)
+      trackEvent('online_join_success')
       setGame(session)
     } catch (error) {
       console.error(error)
+      trackEvent('online_join_failed')
       setOnlineError('加入失敗：請確認代碼正確，或稍後重試。')
     } finally {
       setOnlineBusy(false)
@@ -670,6 +684,7 @@ export default function App() {
       // URL join has higher priority than stored session.
       const code = getJoinCodeFromUrl().trim().toLowerCase().slice(0, 8)
       if (code) {
+        trackEvent('online_restore_from_url')
         await joinOnlineGame(code)
         if (!cancelled) {
           window.history.replaceState({}, '', window.location.pathname)
@@ -678,6 +693,7 @@ export default function App() {
       }
       const session = loadOnlineSession()
       if (!cancelled && session) {
+        trackEvent('online_restore_from_storage', { is_host: Boolean(session.isHost) })
         setGame(session)
       }
     }
@@ -693,6 +709,7 @@ export default function App() {
         matchID={game.localMatchID}
         onBack={() => {
           if (!confirmBackToLobby()) return
+          trackEvent('local_back_to_lobby')
           setGame(null)
         }}
         onRestart={restartLocalGame}
@@ -709,6 +726,7 @@ export default function App() {
         isHost={game.isHost}
         onBack={async () => {
           if (!confirmBackToLobby()) return
+          trackEvent('online_back_to_lobby')
           try {
             await leaveOnlineSession(game)
           } catch (error) {

@@ -1,6 +1,9 @@
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './App.css'
+import { initAnalytics } from './utils/analytics'
+
+initAnalytics(import.meta.env.VITE_GA_MEASUREMENT_ID)
 
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
