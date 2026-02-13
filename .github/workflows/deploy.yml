@@ -17,6 +17,7 @@ jobs:
       - name: Install and Build
         env:
           VITE_BGIO_SERVER_URL: ${{ vars.VITE_BGIO_SERVER_URL }}
+          VITE_GA_MEASUREMENT_ID: ${{ vars.VITE_GA_MEASUREMENT_ID }}
         run: |
           npm install
           npm run build
