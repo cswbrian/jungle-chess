@@ -657,7 +657,7 @@ function GameScreen({ matchID, playerID, credentials, isHost, restartToken = 0, 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: '鬥獸棋',
+          title: '🐀🐱🐺🐕🐆🐯🦁🐘',
           text: `立即對戰！我的鬥獸棋棋局：\n\n${shareUrl}`,
         })
         trackEvent('native_share_used', { mode: 'online', is_host: Boolean(isHost) })
