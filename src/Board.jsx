@@ -47,7 +47,7 @@ function Cell({ r, c, cell, isSelected, isLegalMove, legalMovePlayer, isLastMove
   )
 }
 
-export function Board({ G, ctx, moves, playerID, gameMode = 'unknown' }) {
+export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNewGame }) {
   const [selected, setSelected] = useState(null)
   const [showWinnerOverlay, setShowWinnerOverlay] = useState(false)
   const [eventNotification, setEventNotification] = useState(null)
@@ -239,6 +239,13 @@ export function Board({ G, ctx, moves, playerID, gameMode = 'unknown' }) {
     moves.surrender()
   }
 
+  const handleStartNewGame = () => {
+    if (!isOnlineMode || !gameover || typeof onStartNewGame !== 'function') return
+    const confirmed = window.confirm('要開始新對局嗎？目前這局會關閉並建立新的對戰代碼。')
+    if (!confirmed) return
+    onStartNewGame()
+  }
+
   return (
     <div className="board-wrap">
       {gameover && showWinnerOverlay && (
@@ -266,6 +273,11 @@ export function Board({ G, ctx, moves, playerID, gameMode = 'unknown' }) {
                 </>
               )}
             </div>
+            {isOnlineMode && typeof onStartNewGame === 'function' && (
+              <button type="button" className="new-game-btn" onClick={handleStartNewGame}>
+                開新局
+              </button>
+            )}
           </div>
         </div>
       )}

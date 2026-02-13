@@ -454,7 +454,7 @@ function LocalGameScreen({ matchID, onBack, onRestart }) {
   )
 }
 
-function GameScreen({ matchID, playerID, credentials, isHost, onBack }) {
+function GameScreen({ matchID, playerID, credentials, isHost, onBack, onStartNewGame }) {
   const displayMatchID = matchID.replace(`${APP_ID}-`, '')
   const [rulesOpen, setRulesOpen] = useState(false)
   const [serverStatus, setServerStatus] = useState(BGIO_SERVER_URL ? 'checking' : 'ready') // checking, ready
@@ -584,12 +584,14 @@ function GameScreen({ matchID, playerID, credentials, isHost, onBack }) {
     statusText = '等待主機上線...'
   }
 
+  const showInitialHostGuide = isHost && !opponentConnected && !opponentEverConnected
+
   const handleShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: '鬥獸棋',
-          text: `加入我的鬥獸棋棋局，代碼：${displayMatchID}\n\n${shareUrl}`,
+          text: `立即對戰！我的鬥獸棋棋局：\n\n${shareUrl}`,
         })
         trackEvent('native_share_used', { mode: 'online', is_host: Boolean(isHost) })
         return
@@ -651,34 +653,37 @@ function GameScreen({ matchID, playerID, credentials, isHost, onBack }) {
           ← 返回
         </button>
         <div className="match-info">
-          <code>{displayMatchID}</code>
-          <button type="button" className="copy" onClick={handleCopyCode}>
-            複製
+          <button type="button" className="match-code" onClick={handleCopyCode} title="點擊複製代碼">
+            {displayMatchID}
           </button>
-          {isHost && (
-            <button type="button" className="share-link" onClick={handleShare}>
-              分享
-            </button>
-          )}
         </div>
         <RulesButton onClick={() => setRulesOpen(true)} />
       </header>
-      <div className={`p2p-status-banner ${statusTone}`}>
-        {statusText}
-      </div>
-      {isHost && !opponentConnected && !opponentEverConnected && (
-        <section className="p2p-host-guide">
+      {showInitialHostGuide ? (
+        <section className="p2p-host-guide p2p-host-guide-combined">
           <h3>邀請對手加入</h3>
-          <p>1. 按「分享」或「複製代碼」傳給對手。</p>
+          <p className="p2p-host-status">{statusText}</p>
+          <p>
+            1. 分享
+            <button type="button" className="p2p-host-link" onClick={handleShare}>
+              棋局鏈結
+            </button>
+            ，傳給對手。
+          </p>
           <p>2. 對手加入後，狀態會更新為「對手已加入」。</p>
           {copyFeedback && <p className="p2p-copy-feedback">{copyFeedback}</p>}
         </section>
+      ) : (
+        <div className={`p2p-status-banner ${statusTone}`}>
+          {statusText}
+        </div>
       )}
       <OnlineClient
         matchID={matchID}
         playerID={playerID}
         credentials={credentials}
         onConnectionStateChange={handleConnectionStateChange}
+        onStartNewGame={onStartNewGame}
       />
       <BuyMeCoffeeFooter />
     </div>
@@ -818,6 +823,16 @@ export default function App() {
           }
           clearOnlineSession()
           setGame(null)
+        }}
+        onStartNewGame={async () => {
+          trackEvent('online_new_game_requested')
+          try {
+            await leaveOnlineSession(game)
+          } catch (error) {
+            console.warn('Leave match before new game failed:', error)
+          }
+          clearOnlineSession()
+          await startOnlineGame()
         }}
       />
     )

@@ -575,12 +575,21 @@ body {
   min-width: 0;
 }
 
-.match-info code {
+.match-info .match-code {
   font-size: 0.95rem;
   letter-spacing: 0.12em;
   padding: 0.25rem 0.4rem;
   background: rgba(0,0,0,0.2);
   border-radius: 4px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.match-info .match-code:hover,
+.match-info .match-code:active {
+  background: rgba(0,0,0,0.32);
 }
 
 .game-header .copy,
@@ -691,6 +700,37 @@ body {
   margin: 0.1rem 0;
   font-size: 0.84rem;
   color: rgba(31, 28, 23, 0.75);
+}
+
+.p2p-host-guide-combined {
+  margin-top: 0.6rem;
+}
+
+.p2p-host-status {
+  margin: 0.1rem 0 0.35rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #6d5400;
+}
+
+.p2p-host-link {
+  display: inline;
+  margin: 0 0.15rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #1b5e20;
+  font-size: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.p2p-host-link:hover,
+.p2p-host-link:active {
+  color: #2e7d32;
 }
 
 
