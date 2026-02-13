@@ -429,7 +429,7 @@ function getShareUrl(code) {
   return window.location.origin + (import.meta.env.BASE_URL || '/') + '?code=' + encodeURIComponent(code)
 }
 
-function LocalGameScreen({ matchID, onBack, onRestart }) {
+function LocalGameScreen({ matchID, onBack, onRestart, onStartNewGame }) {
   const [viewingPlayer, setViewingPlayer] = useState('0')
   const [rulesOpen, setRulesOpen] = useState(false)
 
@@ -450,6 +450,7 @@ function LocalGameScreen({ matchID, onBack, onRestart }) {
         matchID={matchID}
         playerID={viewingPlayer}
         onTurnChange={setViewingPlayer}
+        onStartNewGame={onStartNewGame}
       />
       <BuyMeCoffeeFooter />
     </div>
@@ -727,6 +728,13 @@ export default function App() {
     setGame({ isLocal: true, localMatchID: id })
   }
 
+  const startLocalNewGame = () => {
+    const id = `local-${generateMatchID()}`
+    localStorage.setItem('jungle-chess-local-match', id)
+    trackEvent('local_new_game_started_from_end_state')
+    setGame({ isLocal: true, localMatchID: id })
+  }
+
   const startOnlineGame = useCallback(async () => {
     setOnlineBusy(true)
     setOnlineAction('creating')
@@ -804,6 +812,7 @@ export default function App() {
           setGame(null)
         }}
         onRestart={restartLocalGame}
+        onStartNewGame={startLocalNewGame}
       />
     )
   }

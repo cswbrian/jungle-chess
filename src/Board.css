@@ -269,6 +269,10 @@
   box-shadow: 0 6px 14px rgba(46, 125, 50, 0.32);
 }
 
+.board-layer-new-game-btn {
+  margin-top: 0.9rem;
+}
+
 .gameover-overlay.winner-p0 .winner-title,
 .gameover-overlay.winner-p0 .winner-subtitle {
   color: #d32f2f;

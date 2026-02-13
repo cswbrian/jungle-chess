@@ -220,8 +220,9 @@ export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNe
     })
   }, [G?.lastMove, ctx?.turn, gameMode, gameover])
 
-  const winnerColor = gameover?.winner === '0' ? '紅' : '綠'
-  const winnerClass = gameover?.winner === '0' ? 'winner-p0' : 'winner-p1'
+  const winnerID = gameover?.winner != null ? String(gameover.winner) : null
+  const winnerColor = winnerID === '0' ? '紅' : '綠'
+  const winnerClass = winnerID === '0' ? 'winner-p0' : 'winner-p1'
   const isSurrenderEnd = gameover?.reason === 'surrender'
   const surrenderedBy = gameover?.surrenderedBy
   const surrenderText = surrenderedBy === '0' ? '紅方投降' : surrenderedBy === '1' ? '綠方投降' : '有玩家投降'
@@ -239,10 +240,9 @@ export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNe
     moves.surrender()
   }
 
+  const canStartNewGame = gameover && typeof onStartNewGame === 'function'
   const handleStartNewGame = () => {
-    if (!isOnlineMode || !gameover || typeof onStartNewGame !== 'function') return
-    const confirmed = window.confirm('要開始新對局嗎？目前這局會關閉並建立新的對戰代碼。')
-    if (!confirmed) return
+    if (!canStartNewGame) return
     onStartNewGame()
   }
 
@@ -266,18 +266,13 @@ export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNe
                 <>{surrenderText}</>
               ) : (
                 <>
-                  <span className={`piece-badge piece-badge-p${gameover.winner}`}>
+                  <span className={`piece-badge piece-badge-p${winnerID}`}>
                     {winningPieceEmoji}{winningPieceName}
                   </span>
                   攻陷對方獸穴
                 </>
               )}
             </div>
-            {isOnlineMode && typeof onStartNewGame === 'function' && (
-              <button type="button" className="new-game-btn" onClick={handleStartNewGame}>
-                開新局
-              </button>
-            )}
           </div>
         </div>
       )}
@@ -345,6 +340,16 @@ export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNe
             </>
           )}
         </div>
+      )}
+      {canStartNewGame && (
+        <button
+          type="button"
+          className="new-game-btn board-layer-new-game-btn"
+          onClick={handleStartNewGame}
+          title={isOnlineMode ? '立即建立新的對戰代碼' : '重新開始新局'}
+        >
+          {isOnlineMode ? '開新局' : '開始新局'}
+        </button>
       )}
       {isOnlineMode && !gameover && (
         <button
