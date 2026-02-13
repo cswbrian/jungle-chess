@@ -200,6 +200,19 @@ function getOpponentConnected(matchData, playerID) {
   return isPlayerConnected(getPlayerMatchDataEntry(matchData, opponentID))
 }
 
+function formatElapsedSince(seconds) {
+  const safeSeconds = Math.max(0, Number(seconds) || 0)
+  if (safeSeconds < 60) return `${safeSeconds}秒前`
+  const minutes = Math.floor(safeSeconds / 60)
+  const remainSeconds = safeSeconds % 60
+  if (minutes < 60) {
+    return remainSeconds ? `${minutes}分${remainSeconds}秒前` : `${minutes}分鐘前`
+  }
+  const hours = Math.floor(minutes / 60)
+  const remainMinutes = minutes % 60
+  return remainMinutes ? `${hours}小時${remainMinutes}分鐘前` : `${hours}小時前`
+}
+
 function OnlineBoardWrapper(props) {
   const { matchData, playerID, isConnected, onConnectionStateChange } = props
 
@@ -448,6 +461,10 @@ function GameScreen({ matchID, playerID, credentials, isHost, onBack }) {
   const [serverWaitMs, setServerWaitMs] = useState(0)
   const [transportConnected, setTransportConnected] = useState(false)
   const [opponentConnected, setOpponentConnected] = useState(false)
+  const [transportEverConnected, setTransportEverConnected] = useState(false)
+  const [opponentEverConnected, setOpponentEverConnected] = useState(false)
+  const [peerDisconnectedAt, setPeerDisconnectedAt] = useState(0)
+  const [peerDisconnectedForSec, setPeerDisconnectedForSec] = useState(0)
   const [stateSynced, setStateSynced] = useState(false)
   const [copyFeedback, setCopyFeedback] = useState('')
 
@@ -503,12 +520,69 @@ function GameScreen({ matchID, playerID, credentials, isHost, onBack }) {
   }, [copyFeedback])
 
   const handleConnectionStateChange = useCallback(({ transportConnected: connected, opponentConnected: joined }) => {
-    setTransportConnected(Boolean(connected))
-    setOpponentConnected(Boolean(joined))
+    const hasTransport = Boolean(connected)
+    const hasOpponent = Boolean(joined)
+    setTransportConnected(hasTransport)
+    setOpponentConnected(hasOpponent)
+    if (hasTransport) setTransportEverConnected(true)
+    if (hasOpponent) setOpponentEverConnected(true)
     setStateSynced(true)
   }, [])
 
   const shareUrl = getShareUrl(displayMatchID)
+  const peerDisconnected = stateSynced && transportConnected && opponentEverConnected && !opponentConnected
+
+  useEffect(() => {
+    if (peerDisconnected) {
+      setPeerDisconnectedAt((prev) => prev || Date.now())
+      return
+    }
+    setPeerDisconnectedAt(0)
+    setPeerDisconnectedForSec(0)
+  }, [peerDisconnected])
+
+  useEffect(() => {
+    if (!peerDisconnectedAt) return undefined
+    const updateElapsed = () => {
+      const seconds = Math.floor((Date.now() - peerDisconnectedAt) / 1000)
+      setPeerDisconnectedForSec(Math.max(0, seconds))
+    }
+    updateElapsed()
+    const timerID = window.setInterval(updateElapsed, 1000)
+    return () => window.clearInterval(timerID)
+  }, [peerDisconnectedAt])
+
+  const peerLastSeen = peerDisconnectedAt
+    ? `（上次在線 ${formatElapsedSince(peerDisconnectedForSec)}）`
+    : ''
+
+  let statusTone = 'is-waiting'
+  let statusText = ''
+
+  if (!stateSynced) {
+    statusText = '正在同步連線狀態...'
+  } else if (!transportConnected) {
+    statusTone = transportEverConnected ? 'is-disconnected' : 'is-waiting'
+    statusText = transportEverConnected ? '你目前離線中，正在嘗試重新連線伺服器...' : '正在連線伺服器...'
+  } else if (isHost) {
+    if (opponentConnected) {
+      statusTone = 'is-ready'
+      statusText = '對手在線，開始對戰！'
+    } else if (opponentEverConnected) {
+      statusTone = 'is-disconnected'
+      statusText = `對手已離線，等待對手重新連線...${peerLastSeen}`
+    } else {
+      statusText = '等待對手加入中：請先分享代碼或連結。'
+    }
+  } else if (opponentConnected) {
+    statusTone = 'is-ready'
+    statusText = '已連上主機，開始對戰！'
+  } else if (opponentEverConnected) {
+    statusTone = 'is-disconnected'
+    statusText = `主機已離線，等待主機重新連線...${peerLastSeen}`
+  } else {
+    statusText = '等待主機上線...'
+  }
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -589,16 +663,10 @@ function GameScreen({ matchID, playerID, credentials, isHost, onBack }) {
         </div>
         <RulesButton onClick={() => setRulesOpen(true)} />
       </header>
-      <div className={`p2p-status-banner ${(isHost ? opponentConnected : (transportConnected || stateSynced)) ? 'is-ready' : 'is-waiting'}`}>
-        {isHost
-          ? opponentConnected
-            ? '對手已加入，開始對戰！'
-            : '等待對手加入中：請先分享代碼或連結。'
-          : (transportConnected || stateSynced)
-            ? '已連上主機，開始對戰！'
-            : '正在連線伺服器...'}
+      <div className={`p2p-status-banner ${statusTone}`}>
+        {statusText}
       </div>
-      {isHost && !opponentConnected && (
+      {isHost && !opponentConnected && !opponentEverConnected && (
         <section className="p2p-host-guide">
           <h3>邀請對手加入</h3>
           <p>1. 按「分享」或「複製代碼」傳給對手。</p>

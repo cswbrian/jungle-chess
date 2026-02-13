@@ -662,6 +662,12 @@ body {
   border: 1px solid #aad8ae;
 }
 
+.p2p-status-banner.is-disconnected {
+  background: #feecec;
+  color: #8f1f1f;
+  border: 1px solid #f2b5b5;
+}
+
 .p2p-host-guide {
   margin: 0.55rem 0.7rem 0;
   padding: 0.7rem;
