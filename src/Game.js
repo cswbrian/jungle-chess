@@ -165,7 +165,7 @@ export const JungleGame = {
       }
     },
     surrender: ({ G, ctx, playerID }) => {
-      if (ctx.currentPlayer !== playerID) return
+      if (ctx.gameover) return
       G.surrenderedBy = String(playerID)
     },
   },
