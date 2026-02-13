@@ -74,6 +74,18 @@ If deploying elsewhere (Vercel, Netlify, etc.), update:
 - `vite.config.js`: Change `base` to `'/'`
 - `public/manifest.json`: Update `start_url` and icon paths
 - `public/sw.js`: Update `BASE_PATH` constant
+- `.env`: Set `VITE_BGIO_SERVER_URL` to your deployed boardgame.io server URL
+
+## Online Multiplayer Server (Render)
+
+The online mode depends on a boardgame.io backend server.
+
+1. Deploy `server/index.js` as a Render Web Service.
+2. Build command: `npm install`
+3. Start command: `npm run server`
+4. Set `CORS_ORIGINS` to include your frontend origin(s).
+
+Note: Render free tier may sleep. First reconnect after idle can take around 20-90 seconds; the app shows a wake-up waiting message.
 
 ## Features
 

@@ -10,7 +10,7 @@ import {
   INITIAL_1,
   DEN_0,
   DEN_1,
-} from './constants'
+} from './constants.js'
 
 // Piece order for initial setup
 const PIECE_ORDER = [RANK.LION, RANK.TIGER, RANK.LEOPARD, RANK.ELEPHANT, RANK.RAT, RANK.CAT, RANK.DOG, RANK.WOLF]

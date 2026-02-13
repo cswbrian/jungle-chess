@@ -1,80 +1,34 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Client } from 'boardgame.io/react'
 import { Local } from 'boardgame.io'
-import { P2P } from '@boardgame.io/p2p'
+import { SocketIO } from 'boardgame.io/multiplayer'
 import { JungleGame } from './Game'
 import { Board } from './Board'
 import { PIECE_EMOJIS } from './constants'
 import { checkServerHealth } from './utils/serverCheck'
 
 const APP_ID = 'jungle-chess-v1'
-const P2P_ERROR_EVENT = 'bgio-p2p-error'
+const ONLINE_SESSION_KEY = 'jungle-chess-online-session'
+const BGIO_SERVER_URL = (import.meta.env.VITE_BGIO_SERVER_URL || '').replace(/\/$/, '')
 const SERVER_WAKE_MAX_WAIT_MS = 90000
 const SERVER_WAKE_RETRY_MS = 3000
-
-// Build PeerJS options from environment variable.
-// Set VITE_PEERJS_HOST to your deployed PeerJS server hostname
-// (e.g. "jungle-chess-peerjs.onrender.com").
-const peerjsHost = import.meta.env.VITE_PEERJS_HOST
-
-// Enhanced ICE servers list for better connectivity
-const iceServers = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:global.stun.twilio.com:3478' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
-  { urls: 'stun:stun3.l.google.com:19302' },
-  { urls: 'stun:stun4.l.google.com:19302' },
-]
-
-const peerOptions = peerjsHost
-  ? {
-      host: peerjsHost,
-      port: 443,
-      secure: true,
-      path: '/',
-      config: { iceServers },
-    }
-  : {
-      // Fallback: use default PeerJS cloud (works locally)
-      config: { iceServers },
-    }
 
 function Loading({ text = "連線中…" }) {
   return <div className="loading">{text}</div>
 }
 
-function P2PLoading() {
+function OnlineLoading() {
   return <div className="loading">正在同步棋局…</div>
 }
 
-const dispatchError = (e) => {
-  console.error('[P2P Error]', e)
-  window.dispatchEvent(new CustomEvent(P2P_ERROR_EVENT, { detail: e }))
-}
-
-const HostClient = Client({
+const OnlineClient = Client({
   game: JungleGame,
-  board: P2PBoardWrapper,
-  multiplayer: P2P({
-    isHost: true,
-    peerOptions,
-    onError: dispatchError,
+  board: OnlineBoardWrapper,
+  multiplayer: SocketIO({
+    server: BGIO_SERVER_URL || undefined,
   }),
   numPlayers: 2,
-  loading: P2PLoading,
-  debug: false,
-})
-
-const PeerClient = Client({
-  game: JungleGame,
-  board: P2PBoardWrapper,
-  multiplayer: P2P({
-    peerOptions,
-    onError: dispatchError,
-  }),
-  numPlayers: 2,
-  loading: P2PLoading,
+  loading: OnlineLoading,
   debug: false,
 })
 
@@ -196,15 +150,24 @@ function BuyMeCoffeeFooter() {
 }
 
 function parseCodeInput(input) {
-  const trimmed = input.trim().toLowerCase()
-  const codeMatch = trimmed.match(/[?&]code=([a-z0-9]+)/)
-  if (codeMatch) return codeMatch[1].slice(0, 8)
+  const normalize = (value) => {
+    const cleaned = String(value || '').trim().toLowerCase()
+    if (!cleaned) return ''
+    if (cleaned.startsWith(`${APP_ID}-`)) {
+      return cleaned.slice(APP_ID.length + 1).slice(0, 8)
+    }
+    return cleaned.slice(0, 8)
+  }
+
+  const trimmed = input.trim()
+  const codeMatch = trimmed.toLowerCase().match(/[?&]code=([a-z0-9-]+)/)
+  if (codeMatch) return normalize(codeMatch[1])
   try {
     const url = new URL(trimmed)
     const code = url.searchParams.get('code') || ''
-    return code.slice(0, 8)
+    return normalize(code)
   } catch {
-    return trimmed.slice(0, 8)
+    return normalize(trimmed)
   }
 }
 
@@ -236,7 +199,7 @@ function getOpponentConnected(matchData, playerID) {
   return isPlayerConnected(getPlayerMatchDataEntry(matchData, opponentID))
 }
 
-function P2PBoardWrapper(props) {
+function OnlineBoardWrapper(props) {
   const { matchData, playerID, isConnected, onConnectionStateChange } = props
 
   useEffect(() => {
@@ -250,7 +213,88 @@ function P2PBoardWrapper(props) {
   return <Board {...props} />
 }
 
-function Lobby({ onCreate, onJoin, onLocal, hasLocalGame }) {
+function getApiBaseUrl() {
+  return BGIO_SERVER_URL || window.location.origin
+}
+
+async function postLobby(path, body) {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(errorText || `HTTP ${response.status}`)
+  }
+  return response.json()
+}
+
+async function createOnlineSession() {
+  const createResult = await postLobby(`/games/${JungleGame.name}/create`, {
+    numPlayers: 2,
+    unlisted: true,
+  })
+  const matchID = String(createResult.matchID || '')
+  if (!matchID) throw new Error('無法建立棋局')
+  const joinResult = await postLobby(`/games/${JungleGame.name}/${encodeURIComponent(matchID)}/join`, {
+    playerID: '0',
+    playerName: 'Host',
+  })
+  return {
+    matchID,
+    playerID: String(joinResult.playerID),
+    credentials: joinResult.playerCredentials,
+    isHost: true,
+  }
+}
+
+async function joinOnlineSession(code) {
+  const matchID = `${APP_ID}-${code}`
+  const joinResult = await postLobby(`/games/${JungleGame.name}/${encodeURIComponent(matchID)}/join`, {
+    playerID: '1',
+    playerName: 'Guest',
+  })
+  return {
+    matchID,
+    playerID: String(joinResult.playerID),
+    credentials: joinResult.playerCredentials,
+    isHost: false,
+  }
+}
+
+function saveOnlineSession(session) {
+  if (!session) return
+  localStorage.setItem(ONLINE_SESSION_KEY, JSON.stringify({
+    matchID: session.matchID,
+    playerID: session.playerID,
+    credentials: session.credentials,
+    isHost: Boolean(session.isHost),
+  }))
+}
+
+function loadOnlineSession() {
+  try {
+    const raw = localStorage.getItem(ONLINE_SESSION_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed?.matchID || parsed?.playerID == null || !parsed?.credentials) return null
+    return {
+      matchID: String(parsed.matchID),
+      playerID: String(parsed.playerID),
+      credentials: String(parsed.credentials),
+      isHost: Boolean(parsed.isHost),
+    }
+  } catch {
+    return null
+  }
+}
+
+function clearOnlineSession() {
+  localStorage.removeItem(ONLINE_SESSION_KEY)
+}
+
+function Lobby({ onCreate, onJoin, onLocal, hasLocalGame, onlineBusy, onlineError }) {
   const [matchID, setMatchID] = useState('')
   const [rulesOpen, setRulesOpen] = useState(false)
 
@@ -284,15 +328,16 @@ function Lobby({ onCreate, onJoin, onLocal, hasLocalGame }) {
         </div>
         <div className="action-card action-card-p2p">
           <span className="action-icon" aria-hidden>✦</span>
-          <h2>P2P 對戰</h2>
+          <h2>線上對戰</h2>
           <p className="action-desc">可開新局分享代碼，或輸入代碼加入朋友棋局</p>
           <div className="p2p-actions">
             <button
               type="button"
               className="p2p-create-btn"
-              onClick={() => onCreate(generateMatchID())}
+              onClick={onCreate}
+              disabled={onlineBusy}
             >
-              開新局
+              {onlineBusy ? '連線中…' : '開新局'}
             </button>
             <div className="p2p-join-row">
               <input
@@ -301,18 +346,20 @@ function Lobby({ onCreate, onJoin, onLocal, hasLocalGame }) {
                 value={matchID}
                 onChange={(e) => setMatchID(e.target.value)}
                 maxLength={200}
+                disabled={onlineBusy}
               />
               <button
                 type="button"
                 className="p2p-join-btn"
                 onClick={handleJoin}
-                disabled={!parseCodeInput(matchID)}
+                disabled={onlineBusy || !parseCodeInput(matchID)}
               >
                 加入棋局
               </button>
             </div>
           </div>
-          <p className="lobby-disclaimer">同機對戰會自動儲存進度，P2P 對戰則會在重新整理後消失</p>
+          <p className="lobby-disclaimer">線上對戰改為伺服器同步：重新整理會嘗試續接棋局（伺服器在線時）。</p>
+          {onlineError && <p className="lobby-disclaimer">{onlineError}</p>}
         </div>
       </div>
       <BuyMeCoffeeFooter />
@@ -351,20 +398,18 @@ function LocalGameScreen({ matchID, onBack, onRestart }) {
   )
 }
 
-function GameScreen({ matchID, playerID, isHost, onBack }) {
-  const ClientComponent = isHost ? HostClient : PeerClient
+function GameScreen({ matchID, playerID, credentials, isHost, onBack }) {
   const displayMatchID = matchID.replace(`${APP_ID}-`, '')
   const [rulesOpen, setRulesOpen] = useState(false)
-  const [serverStatus, setServerStatus] = useState(peerjsHost ? 'checking' : 'ready') // checking, ready
+  const [serverStatus, setServerStatus] = useState(BGIO_SERVER_URL ? 'checking' : 'ready') // checking, ready
   const [serverWaitMs, setServerWaitMs] = useState(0)
-  const [connectionError, setConnectionError] = useState(null)
   const [transportConnected, setTransportConnected] = useState(false)
   const [opponentConnected, setOpponentConnected] = useState(false)
   const [stateSynced, setStateSynced] = useState(false)
   const [copyFeedback, setCopyFeedback] = useState('')
 
   useEffect(() => {
-    // 1. Check / wake server if using custom host (handles cold starts).
+    // Check / wake Render server if using a custom server URL.
     let cancelled = false
     const startedAt = Date.now()
     setServerWaitMs(0)
@@ -373,14 +418,14 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
     }, 1000)
 
     const warmupServer = async () => {
-      if (!peerjsHost) {
+      if (!BGIO_SERVER_URL) {
         setServerStatus('ready')
         return
       }
 
       while (!cancelled) {
         try {
-          const isHealthy = await checkServerHealth(`https://${peerjsHost}`)
+          const isHealthy = await checkServerHealth(BGIO_SERVER_URL)
           if (cancelled) return
           if (isHealthy) {
             setServerStatus('ready')
@@ -402,26 +447,9 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
     }
 
     warmupServer()
-
-    // 2. Listen for P2P errors
-    const handleError = (event) => {
-      const error = event.detail
-      console.error('Caught P2P Error:', error)
-      
-      // Filter common noise errors if needed, or show all
-      let msg = '連線發生錯誤'
-      if (error.type === 'peer-unavailable') msg = '找不到對手或對手已離線'
-      if (error.type === 'network') msg = '網路連線不穩定'
-      if (error.type === 'server-error') msg = '伺服器連線失敗'
-      
-      setConnectionError(msg)
-    }
-
-    window.addEventListener(P2P_ERROR_EVENT, handleError)
     return () => {
       cancelled = true
       window.clearInterval(waitTimerID)
-      window.removeEventListener(P2P_ERROR_EVENT, handleError)
     }
   }, [])
 
@@ -494,27 +522,6 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
     )
   }
 
-  if (connectionError) {
-    return (
-      <div className="game-screen">
-        <header className={`game-header player-${playerID}`}>
-          <button type="button" className="back" onClick={onBack}>
-            ← 返回
-          </button>
-        </header>
-        <div className="lobby" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '50vh' }}>
-          <div className="action-card">
-             <span className="action-icon">⚠</span>
-             <h2>連線錯誤</h2>
-             <p>{connectionError}</p>
-             <button onClick={() => window.location.reload()}>重試</button>
-          </div>
-        </div>
-        <BuyMeCoffeeFooter />
-      </div>
-    )
-  }
-
   return (
     <div className="game-screen">
       <RulesModal open={rulesOpen} onClose={() => setRulesOpen(false)} />
@@ -535,14 +542,14 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
         </div>
         <RulesButton onClick={() => setRulesOpen(true)} />
       </header>
-      <div className={`p2p-status-banner ${(isHost ? opponentConnected : stateSynced) ? 'is-ready' : 'is-waiting'}`}>
+      <div className={`p2p-status-banner ${(isHost ? opponentConnected : (transportConnected || stateSynced)) ? 'is-ready' : 'is-waiting'}`}>
         {isHost
           ? opponentConnected
             ? '對手已加入，開始對戰！'
             : '等待對手加入中：請先分享代碼或連結。'
-          : stateSynced
+          : (transportConnected || stateSynced)
             ? '已連上主機，開始對戰！'
-            : '正在連線主機...'}
+            : '正在連線伺服器...'}
       </div>
       {isHost && !opponentConnected && (
         <section className="p2p-host-guide">
@@ -552,9 +559,10 @@ function GameScreen({ matchID, playerID, isHost, onBack }) {
           {copyFeedback && <p className="p2p-copy-feedback">{copyFeedback}</p>}
         </section>
       )}
-      <ClientComponent
+      <OnlineClient
         matchID={matchID}
         playerID={playerID}
+        credentials={credentials}
         onConnectionStateChange={handleConnectionStateChange}
       />
       <BuyMeCoffeeFooter />
@@ -569,6 +577,8 @@ function getJoinCodeFromUrl() {
 
 export default function App() {
   const [game, setGame] = useState(null)
+  const [onlineBusy, setOnlineBusy] = useState(false)
+  const [onlineError, setOnlineError] = useState('')
 
   const startLocalGame = () => {
     let id = localStorage.getItem('jungle-chess-local-match')
@@ -587,14 +597,60 @@ export default function App() {
     setGame({ isLocal: true, localMatchID: id })
   }
 
-  useEffect(() => {
-    // Check for P2P join code first
-    const code = getJoinCodeFromUrl().trim().toLowerCase().slice(0, 8)
-    if (code) {
-      setGame({ matchID: `${APP_ID}-${code}`, playerID: '1', isHost: false })
-      window.history.replaceState({}, '', window.location.pathname)
+  const startOnlineGame = useCallback(async () => {
+    setOnlineBusy(true)
+    setOnlineError('')
+    try {
+      const session = await createOnlineSession()
+      saveOnlineSession(session)
+      setGame(session)
+    } catch (error) {
+      console.error(error)
+      setOnlineError('建立棋局失敗，伺服器可能仍在喚醒，請稍後重試。')
+    } finally {
+      setOnlineBusy(false)
     }
   }, [])
+
+  const joinOnlineGame = useCallback(async (code) => {
+    setOnlineBusy(true)
+    setOnlineError('')
+    try {
+      const normalized = String(code || '').trim().toLowerCase().slice(0, 8)
+      if (!normalized) return
+      const session = await joinOnlineSession(normalized)
+      saveOnlineSession(session)
+      setGame(session)
+    } catch (error) {
+      console.error(error)
+      setOnlineError('加入失敗：請確認代碼正確，或稍後重試。')
+    } finally {
+      setOnlineBusy(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const restore = async () => {
+      // URL join has higher priority than stored session.
+      const code = getJoinCodeFromUrl().trim().toLowerCase().slice(0, 8)
+      if (code) {
+        await joinOnlineGame(code)
+        if (!cancelled) {
+          window.history.replaceState({}, '', window.location.pathname)
+        }
+        return
+      }
+      const session = loadOnlineSession()
+      if (!cancelled && session) {
+        setGame(session)
+      }
+    }
+    restore()
+    return () => {
+      cancelled = true
+    }
+  }, [joinOnlineGame])
 
   if (game?.isLocal) {
     return (
@@ -611,8 +667,12 @@ export default function App() {
       <GameScreen
         matchID={game.matchID}
         playerID={game.playerID}
+        credentials={game.credentials}
         isHost={game.isHost}
-        onBack={() => setGame(null)}
+        onBack={() => {
+          clearOnlineSession()
+          setGame(null)
+        }}
       />
     )
   }
@@ -639,10 +699,12 @@ export default function App() {
 
   return (
     <Lobby
-      onCreate={(matchID) => setGame({ matchID: `${APP_ID}-${matchID}`, playerID: '0', isHost: true })}
-      onJoin={(matchID) => setGame({ matchID: `${APP_ID}-${matchID}`, playerID: '1', isHost: false })}
+      onCreate={startOnlineGame}
+      onJoin={joinOnlineGame}
       onLocal={startLocalGame}
       hasLocalGame={hasLocalGame}
+      onlineBusy={onlineBusy}
+      onlineError={onlineError}
     />
   )
 }

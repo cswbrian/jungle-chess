@@ -1,15 +1,23 @@
 # 鬥獸棋 Jungle Chess
 
-1 vs 1 P2P 鬥獸棋 (Jungle / Dou Shou Qi) web app. Uses [boardgame.io](https://boardgame.io/) with [@boardgame.io/p2p](https://github.com/boardgameio/p2p) (PeerJS) for peer-to-peer gameplay. Deploy as a static site to GitHub Pages or Cloudflare Pages.
+1 vs 1 鬥獸棋 (Jungle / Dou Shou Qi) web app. The online mode uses an authoritative [boardgame.io](https://boardgame.io/) server (Socket.IO transport), so refresh can reconnect to the same match when session data is still valid.
 
 ## Run locally
 
 ```bash
 npm install
+npm run server
 npm run dev
 ```
 
-Open http://localhost:5173. One tab: **Create game** and share the 6-letter code. Another tab (or device): **Join game** and enter the code.
+- Frontend: http://localhost:5173
+- boardgame.io server: http://localhost:8000
+
+For local frontend env, set:
+
+```bash
+VITE_BGIO_SERVER_URL=http://localhost:8000
+```
 
 ## Build
 
@@ -17,35 +25,29 @@ Open http://localhost:5173. One tab: **Create game** and share the 6-letter code
 npm run build
 ```
 
-Output is in `dist/`. For production builds, set `VITE_PEERJS_HOST` to your PeerJS server hostname (see Deploy below).
+Output is in `dist/`.
 
-## Deploy
+## Deploy (Render + Static Hosting)
 
-The app needs a **PeerJS signaling server** for production. The default PeerJS cloud (`0.peerjs.com`) is unreliable on deployed sites; hosting your own fixes this.
+### 1) Deploy boardgame.io server on Render
 
-### 1. Deploy the PeerJS server (Render, free)
+1. Connect the repo in Render.
+2. Create a **Web Service**.
+3. Root directory: project root.
+4. Build command: `npm install`
+5. Start command: `npm run server`
+6. Add env vars:
+   - `PORT` (Render usually sets this automatically)
+   - `CORS_ORIGINS` (comma-separated, include your frontend domains)
 
-1. Go to [render.com](https://render.com) and connect your GitHub repo.
-2. New → **Web Service**.
-3. Set **Root Directory** to `peerjs-server`.
-4. Build Command: `npm install`, Start Command: `node index.js`.
-5. Create → Free plan. Copy the hostname (e.g. `jungle-chess-peerjs.onrender.com`).
+### 2) Deploy frontend (GitHub Pages / Cloudflare Pages)
 
-### 2. Deploy the static app
+Set:
 
-**GitHub Pages** (uses the included workflow):
+```bash
+VITE_BGIO_SERVER_URL=https://<your-render-service>.onrender.com
+```
 
-1. Settings → Secrets and variables → Actions → **Variables**.
-2. Add `VITE_PEERJS_HOST` = your Render hostname.
-3. Push to `main`; the workflow builds and deploys.
+## Notes on Free Tier Wake-Up
 
-**Cloudflare Pages**:
-
-1. Connect the repo, build command `npm run build`, output `dist`.
-2. Add env var `VITE_PEERJS_HOST` = your Render hostname.
-
-HTTPS is required for WebRTC; both GitHub Pages and Cloudflare Pages provide it.
-
-## Plan
-
-See [PLAN.md](PLAN.md) for approach and post-MVP (e.g. local storage).
+Render free services may sleep after inactivity. First connection after idle can take 20-90 seconds. The frontend shows a wake-up progress message and keeps retrying.

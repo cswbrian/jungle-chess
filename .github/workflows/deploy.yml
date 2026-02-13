@@ -16,7 +16,7 @@ jobs:
 
       - name: Install and Build
         env:
-          VITE_PEERJS_HOST: ${{ vars.VITE_PEERJS_HOST }}
+          VITE_BGIO_SERVER_URL: ${{ vars.VITE_BGIO_SERVER_URL }}
         run: |
           npm install
           npm run build
