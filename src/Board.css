@@ -506,6 +506,8 @@
   width: clamp(10px, 2.5vw, 14px);
   height: clamp(10px, 2.5vw, 14px);
   border-radius: 50%;
+  z-index: 4;
+  pointer-events: none;
 }
 
 .cell.legal.legal-p0::after {
