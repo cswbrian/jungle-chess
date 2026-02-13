@@ -191,7 +191,9 @@ function isPlayerConnected(entry) {
   if (!entry) return false
   if (typeof entry.isConnected === 'boolean') return entry.isConnected
   if (typeof entry.connected === 'boolean') return entry.connected
-  return false
+  // Some transports don't expose explicit connection flags in matchData.
+  // If the opponent entry exists, treat them as available to avoid stale "waiting" UI.
+  return true
 }
 
 function getOpponentConnected(matchData, playerID) {
