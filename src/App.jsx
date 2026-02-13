@@ -263,6 +263,26 @@ async function joinOnlineSession(code) {
   }
 }
 
+async function leaveOnlineSession({ matchID, playerID, credentials }) {
+  if (!matchID || playerID == null || !credentials) return
+  const controller = new AbortController()
+  const timeoutID = window.setTimeout(() => controller.abort(), 2500)
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/games/${JungleGame.name}/${encodeURIComponent(matchID)}/leave`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerID, credentials }),
+      signal: controller.signal,
+    })
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(errorText || `HTTP ${response.status}`)
+    }
+  } finally {
+    window.clearTimeout(timeoutID)
+  }
+}
+
 function saveOnlineSession(session) {
   if (!session) return
   localStorage.setItem(ONLINE_SESSION_KEY, JSON.stringify({
@@ -669,7 +689,12 @@ export default function App() {
         playerID={game.playerID}
         credentials={game.credentials}
         isHost={game.isHost}
-        onBack={() => {
+        onBack={async () => {
+          try {
+            await leaveOnlineSession(game)
+          } catch (error) {
+            console.warn('Leave match failed:', error)
+          }
           clearOnlineSession()
           setGame(null)
         }}
