@@ -6,20 +6,20 @@ export const COLS = 7
 export const RANK = {
   RAT: 1,
   CAT: 2,
-  DOG: 3,
-  WOLF: 4,
+  WOLF: 3,
+  DOG: 4,
   LEOPARD: 5,
   TIGER: 6,
   LION: 7,
   ELEPHANT: 8,
 }
 
-// Traditional Chinese (繁體中文): 鼠 貓 狗 狼 豹 虎 獅 象
+// Traditional Chinese (繁體中文): 鼠 貓 狼 狗 豹 虎 獅 象
 export const PIECE_NAMES = {
   1: '鼠',   // Rat, shǔ
   2: '貓',   // Cat, māo
-  3: '狗',   // Dog, gǒu
-  4: '狼',   // Wolf, láng
+  3: '狼',   // Wolf, láng
+  4: '狗',   // Dog, gǒu
   5: '豹',   // Leopard, bào
   6: '虎',   // Tiger, hǔ
   7: '獅',   // Lion, shī
@@ -30,8 +30,8 @@ export const PIECE_NAMES = {
 export const PIECE_EMOJIS = {
   1: '🐀',   // Rat
   2: '🐱',   // Cat
-  3: '🐕',   // Dog
-  4: '🐺',   // Wolf
+  3: '🐺',   // Wolf
+  4: '🐕',   // Dog
   5: '🐆',   // Leopard
   6: '🐯',   // Tiger
   7: '🦁',   // Lion
@@ -85,7 +85,7 @@ export function getRiverJump(r, c, dr, dc) {
 }
 
 // Initial piece positions [row, col] for each player.
-// Order: Lion, Tiger, Leopard, Elephant, Rat, Cat, Dog, Wolf
+// Order: Lion, Tiger, Leopard, Elephant, Rat, Cat, Wolf, Dog
 export const INITIAL_0 = [
   [0, 0], [0, 6], [2, 2], [2, 6], [2, 0], [1, 5], [1, 1], [2, 4]
 ]
