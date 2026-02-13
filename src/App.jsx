@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Client } from 'boardgame.io/react'
 import { Local } from 'boardgame.io'
 import { SocketIO } from 'boardgame.io/multiplayer'
@@ -431,12 +431,34 @@ function getShareUrl(code) {
 
 function LocalGameScreen({ matchID, onBack, onRestart, onStartNewGame }) {
   const [viewingPlayer, setViewingPlayer] = useState('0')
+  const [turnNotice, setTurnNotice] = useState(null)
   const [rulesOpen, setRulesOpen] = useState(false)
+  const lastTurnRef = useRef(null)
+
+  const handleLocalTurnChange = useCallback((nextPlayer) => {
+    const normalizedPlayer = String(nextPlayer ?? '0')
+    setViewingPlayer(normalizedPlayer)
+
+    // Skip first sync; only show swap cue on real handoff.
+    if (lastTurnRef.current == null) {
+      lastTurnRef.current = normalizedPlayer
+      return
+    }
+
+    if (lastTurnRef.current !== normalizedPlayer) {
+      setTurnNotice({
+        id: Date.now(),
+        player: normalizedPlayer,
+      })
+    }
+
+    lastTurnRef.current = normalizedPlayer
+  }, [])
 
   return (
     <div className="game-screen">
       <RulesModal open={rulesOpen} onClose={() => setRulesOpen(false)} />
-      <header className="game-header game-header-local">
+      <header className={`game-header game-header-local player-${viewingPlayer}`}>
         <button type="button" className="back" onClick={onBack}>
           ← 返回
         </button>
@@ -446,10 +468,16 @@ function LocalGameScreen({ matchID, onBack, onRestart, onStartNewGame }) {
         </button>
         <RulesButton onClick={() => setRulesOpen(true)} />
       </header>
+      {turnNotice && (
+        <div key={turnNotice.id} className={`local-turn-notice player-${turnNotice.player}`} role="status" aria-live="polite">
+          <span className="local-turn-notice-label">換手</span>
+          <strong>{turnNotice.player === '0' ? '紅方回合' : '綠方回合'}</strong>
+        </div>
+      )}
       <LocalClient
         matchID={matchID}
         playerID={viewingPlayer}
-        onTurnChange={setViewingPlayer}
+        onTurnChange={handleLocalTurnChange}
         onStartNewGame={onStartNewGame}
       />
       <BuyMeCoffeeFooter />
