@@ -122,7 +122,6 @@ export const JungleGame = {
   setup: () => ({
     cells: setupGrid(),
     lastMove: null,
-    surrenderedBy: null,
   }),
   turn: {
     minMoves: 1,
@@ -164,14 +163,8 @@ export const JungleGame = {
         enteredTrap,
       }
     },
-    surrender: ({ G, ctx, playerID }) => {
-      if (ctx.gameover) return
-      G.surrenderedBy = String(playerID)
-    },
   },
   endIf: ({ G, ctx }) => {
-    if (G.surrenderedBy === '0') return { winner: '1', reason: 'surrender', surrenderedBy: '0' }
-    if (G.surrenderedBy === '1') return { winner: '0', reason: 'surrender', surrenderedBy: '1' }
     const den0 = G.cells[DEN_0.r][DEN_0.c]
     const den1 = G.cells[DEN_1.r][DEN_1.c]
     if (den0?.player === '1') return { winner: '1' }

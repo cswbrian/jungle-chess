@@ -207,11 +207,9 @@ export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNe
     if (gameEndTrackedRef.current) return
     gameEndTrackedRef.current = true
 
-    const endReason = gameover?.reason === 'surrender'
-      ? 'surrender'
-      : G?.lastMove?.captured
-        ? 'all_pieces_eliminated_or_capture_sequence'
-        : 'den_occupied'
+    const endReason = G?.lastMove?.captured
+      ? 'all_pieces_eliminated_or_capture_sequence'
+      : 'den_occupied'
     trackEvent('game_end', {
       mode: gameMode,
       winner: String(gameover.winner),
@@ -223,22 +221,10 @@ export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNe
   const winnerID = gameover?.winner != null ? String(gameover.winner) : null
   const winnerColor = winnerID === '0' ? '紅' : '綠'
   const winnerClass = winnerID === '0' ? 'winner-p0' : 'winner-p1'
-  const isSurrenderEnd = gameover?.reason === 'surrender'
-  const surrenderedBy = gameover?.surrenderedBy
-  const surrenderText = surrenderedBy === '0' ? '紅方投降' : surrenderedBy === '1' ? '綠方投降' : '有玩家投降'
   
   // Get the winning piece from lastMove
   const winningPieceEmoji = G.lastMove ? PIECE_EMOJIS[G.lastMove.piece] : '🏆'
   const winningPieceName = G.lastMove ? PIECE_NAMES[G.lastMove.piece] : ''
-
-  const canSurrender = isOnlineMode && !gameover && playerID != null
-
-  const handleSurrender = () => {
-    if (!canSurrender || typeof moves?.surrender !== 'function') return
-    const confirmed = window.confirm('確定要投降嗎？\n按下「確定」後本局將立即判負並結束。')
-    if (!confirmed) return
-    moves.surrender()
-  }
 
   const canStartNewGame = gameover && typeof onStartNewGame === 'function'
   const handleStartNewGame = () => {
@@ -262,16 +248,10 @@ export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNe
             <div className="winner-trophy">{winningPieceEmoji}</div>
             <div className="winner-title">{winnerColor}方獲勝！</div>
             <div className="winner-subtitle">
-              {isSurrenderEnd ? (
-                <>{surrenderText}</>
-              ) : (
-                <>
-                  <span className={`piece-badge piece-badge-p${winnerID}`}>
-                    {winningPieceEmoji}{winningPieceName}
-                  </span>
-                  攻陷對方獸穴
-                </>
-              )}
+              <span className={`piece-badge piece-badge-p${winnerID}`}>
+                {winningPieceEmoji}{winningPieceName}
+              </span>
+              攻陷對方獸穴
             </div>
           </div>
         </div>
@@ -349,17 +329,6 @@ export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNe
           title={isOnlineMode ? '立即建立新的對戰代碼' : '重新開始新局'}
         >
           {isOnlineMode ? '開新局' : '開始新局'}
-        </button>
-      )}
-      {isOnlineMode && !gameover && (
-        <button
-          type="button"
-          className="surrender-btn"
-          onClick={handleSurrender}
-          disabled={!canSurrender}
-          title={canSurrender ? '投降並結束本局' : '目前無法投降'}
-        >
-          投降
         </button>
       )}
     </div>
