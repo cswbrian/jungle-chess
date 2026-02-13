@@ -299,6 +299,14 @@ async function leaveOnlineSession({ matchID, playerID, credentials }) {
   }
 }
 
+async function restartOnlineSession({ matchID, playerID, credentials }) {
+  if (!matchID || playerID == null || !credentials) throw new Error('缺少重新開始所需參數')
+  await postLobby(`/games/${JungleGame.name}/${encodeURIComponent(matchID)}/restart`, {
+    playerID,
+    credentials,
+  })
+}
+
 function saveOnlineSession(session) {
   if (!session) return
   localStorage.setItem(ONLINE_SESSION_KEY, JSON.stringify({
@@ -485,7 +493,7 @@ function LocalGameScreen({ matchID, onBack, onRestart, onStartNewGame }) {
   )
 }
 
-function GameScreen({ matchID, playerID, credentials, isHost, onBack, onStartNewGame }) {
+function GameScreen({ matchID, playerID, credentials, isHost, restartToken = 0, onBack, onStartNewGame }) {
   const displayMatchID = matchID.replace(`${APP_ID}-`, '')
   const [rulesOpen, setRulesOpen] = useState(false)
   const [serverStatus, setServerStatus] = useState(BGIO_SERVER_URL ? 'checking' : 'ready') // checking, ready
@@ -498,6 +506,8 @@ function GameScreen({ matchID, playerID, credentials, isHost, onBack, onStartNew
   const [peerDisconnectedForSec, setPeerDisconnectedForSec] = useState(0)
   const [stateSynced, setStateSynced] = useState(false)
   const [copyFeedback, setCopyFeedback] = useState('')
+  const [isGameOver, setIsGameOver] = useState(false)
+  const [remoteRestartToken, setRemoteRestartToken] = useState(0)
 
   useEffect(() => {
     // Check / wake Render server if using a custom server URL.
@@ -549,6 +559,32 @@ function GameScreen({ matchID, playerID, credentials, isHost, onBack, onStartNew
     const timerID = window.setTimeout(() => setCopyFeedback(''), 1400)
     return () => window.clearTimeout(timerID)
   }, [copyFeedback])
+
+  useEffect(() => {
+    if (!isGameOver) return undefined
+
+    let cancelled = false
+    const pollRestartState = async () => {
+      try {
+        const response = await fetch(`${getApiBaseUrl()}/games/${JungleGame.name}/${encodeURIComponent(matchID)}`)
+        if (!response.ok) return
+        const metadata = await response.json()
+        if (!cancelled && !metadata?.gameover) {
+          setRemoteRestartToken(Date.now())
+          setIsGameOver(false)
+        }
+      } catch {
+        // Ignore transient network errors while polling.
+      }
+    }
+
+    pollRestartState()
+    const timerID = window.setInterval(pollRestartState, 2500)
+    return () => {
+      cancelled = true
+      window.clearInterval(timerID)
+    }
+  }, [isGameOver, matchID])
 
   const handleConnectionStateChange = useCallback(({ transportConnected: connected, opponentConnected: joined }) => {
     const hasTransport = Boolean(connected)
@@ -710,11 +746,13 @@ function GameScreen({ matchID, playerID, credentials, isHost, onBack, onStartNew
         </div>
       )}
       <OnlineClient
+        key={`${matchID}:${playerID}:${restartToken}:${remoteRestartToken}`}
         matchID={matchID}
         playerID={playerID}
         credentials={credentials}
         onConnectionStateChange={handleConnectionStateChange}
         onStartNewGame={onStartNewGame}
+        onGameoverChange={setIsGameOver}
       />
       <BuyMeCoffeeFooter />
     </div>
@@ -852,6 +890,7 @@ export default function App() {
         playerID={game.playerID}
         credentials={game.credentials}
         isHost={game.isHost}
+        restartToken={game.restartToken || 0}
         onBack={async () => {
           if (!confirmBackToLobby()) return
           trackEvent('online_back_to_lobby')
@@ -864,14 +903,16 @@ export default function App() {
           setGame(null)
         }}
         onStartNewGame={async () => {
-          trackEvent('online_new_game_requested')
+          trackEvent('online_restart_requested')
           try {
-            await leaveOnlineSession(game)
+            await restartOnlineSession(game)
+            setGame({ ...game, restartToken: Date.now() })
+            trackEvent('online_restart_success')
           } catch (error) {
-            console.warn('Leave match before new game failed:', error)
+            console.error('Restart match failed:', error)
+            trackEvent('online_restart_failed')
+            window.alert('重新開始失敗，請稍後再試。')
           }
-          clearOnlineSession()
-          await startOnlineGame()
         }}
       />
     )

@@ -47,7 +47,7 @@ function Cell({ r, c, cell, isSelected, isLegalMove, legalMovePlayer, isLastMove
   )
 }
 
-export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNewGame }) {
+export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNewGame, onGameoverChange }) {
   const [selected, setSelected] = useState(null)
   const [showWinnerOverlay, setShowWinnerOverlay] = useState(false)
   const [eventNotification, setEventNotification] = useState(null)
@@ -131,6 +131,11 @@ export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNe
       setShowWinnerOverlay(true)
     }
   }, [gameover])
+
+  useEffect(() => {
+    if (!onGameoverChange) return
+    onGameoverChange(Boolean(gameover))
+  }, [gameover, onGameoverChange])
 
   // Show event notification for captures and traps
   useEffect(() => {
@@ -326,9 +331,9 @@ export function Board({ G, ctx, moves, playerID, gameMode = 'unknown', onStartNe
           type="button"
           className="new-game-btn board-layer-new-game-btn"
           onClick={handleStartNewGame}
-          title={isOnlineMode ? '立即建立新的對戰代碼' : '重新開始新局'}
+          title="重新開始新局"
         >
-          {isOnlineMode ? '開新局' : '開始新局'}
+          {isOnlineMode ? '重新開始' : '開始新局'}
         </button>
       )}
     </div>
