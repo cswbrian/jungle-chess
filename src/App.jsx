@@ -66,6 +66,29 @@ const RULES_CONTENT = [
   { title: '獸穴', text: '佔領敵方獸穴即勝。' },
 ]
 
+const FAQ_ITEMS = [
+  {
+    question: '鬥獸棋怎麼玩？',
+    answer: '每回合移動一枚棋子，上下左右一格。一般是大吃小、同級互吃，先佔領對方獸穴就獲勝。',
+  },
+  {
+    question: '鼠可以吃象嗎？',
+    answer: '可以。這是鬥獸棋的特殊規則：鼠能吃象，但象不能吃鼠。',
+  },
+  {
+    question: '獅子和老虎可以跳河嗎？',
+    answer: '可以。獅與虎能直線跳過河，但若路徑上有鼠在水中，跳河會被阻擋。',
+  },
+  {
+    question: '可以和朋友遠端連線對戰嗎？',
+    answer: '可以。開新局後分享代碼或連結，對手輸入後即可加入同一盤棋。',
+  },
+  {
+    question: '手機可以玩鬥獸棋嗎？',
+    answer: '可以。此版本支援手機與電腦瀏覽器，無需下載即可開始遊玩。',
+  },
+]
+
 const HERO_RELATIONSHIPS = [
   [8, 7],
   [7, 6],
@@ -147,6 +170,23 @@ function BuyMeCoffeeFooter() {
         <span className="bmc-text">Buy me a coffee</span>
       </a>
     </footer>
+  )
+}
+
+function FaqSection() {
+  return (
+    <section className="faq-section" aria-label="鬥獸棋常見問題">
+      <h2>常見問題 FAQ</h2>
+      <p className="faq-intro">快速看懂鬥獸棋規則與線上對戰方式。</p>
+      <div className="faq-list">
+        {FAQ_ITEMS.map((item) => (
+          <details key={item.question} className="faq-item">
+            <summary>{item.question}</summary>
+            <p>{item.answer}</p>
+          </details>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -428,6 +468,7 @@ function Lobby({ onCreate, onJoin, onLocal, hasLocalGame, onlineBusy, onlineActi
           </div>
         </div>
       </div>
+      <FaqSection />
       <BuyMeCoffeeFooter />
     </div>
   )

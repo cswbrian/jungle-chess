@@ -26,10 +26,10 @@ body {
   padding-top: max(0.85rem, env(safe-area-inset-top));
   padding-bottom: calc(3.15rem + env(safe-area-inset-bottom));
   text-align: center;
-  height: 100dvh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
   position: relative;
 }
 
@@ -510,6 +510,66 @@ body {
   white-space: nowrap;
 }
 
+.faq-section {
+  margin-top: 0.85rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(139, 115, 85, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.faq-section h2 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: #1f1c17;
+}
+
+.faq-intro {
+  margin: 0.28rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(31, 28, 23, 0.68);
+}
+
+.faq-list {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.faq-item {
+  border: 1px solid rgba(139, 115, 85, 0.26);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.42rem 0.5rem;
+}
+
+.faq-item summary {
+  cursor: pointer;
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: #2b2720;
+}
+
+.faq-item p {
+  margin: 0.38rem 0 0;
+  font-size: 0.8rem;
+  color: rgba(31, 28, 23, 0.8);
+  line-height: 1.4;
+}
+
+.faq-more {
+  margin: 0.58rem 0 0;
+  font-size: 0.76rem;
+  color: rgba(31, 28, 23, 0.68);
+}
+
+.faq-link {
+  color: #1b5e20;
+  font-weight: 700;
+}
+
 .game-screen {
   min-height: 100dvh;
   display: flex;
@@ -915,6 +975,19 @@ body {
   .lobby-actions {
     gap: 0.56rem;
     margin-top: 0.44rem;
+  }
+
+  .faq-section {
+    margin-top: 0.6rem;
+    padding: 0.6rem;
+  }
+
+  .faq-item summary {
+    font-size: 0.79rem;
+  }
+
+  .faq-item p {
+    font-size: 0.76rem;
   }
 
   .action-card {
