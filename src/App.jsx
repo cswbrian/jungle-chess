@@ -869,51 +869,55 @@ export default function App() {
 
   if (game?.isLocal) {
     return (
-      <LocalGameScreen
-        matchID={game.localMatchID}
-        onBack={() => {
-          if (!confirmBackToLobby()) return
-          trackEvent('local_back_to_lobby')
-          setGame(null)
-        }}
-        onRestart={restartLocalGame}
-        onStartNewGame={startLocalNewGame}
-      />
+      <main>
+        <LocalGameScreen
+          matchID={game.localMatchID}
+          onBack={() => {
+            if (!confirmBackToLobby()) return
+            trackEvent('local_back_to_lobby')
+            setGame(null)
+          }}
+          onRestart={restartLocalGame}
+          onStartNewGame={startLocalNewGame}
+        />
+      </main>
     )
   }
 
   if (game) {
     return (
-      <GameScreen
-        matchID={game.matchID}
-        playerID={game.playerID}
-        credentials={game.credentials}
-        isHost={game.isHost}
-        restartToken={game.restartToken || 0}
-        onBack={async () => {
-          if (!confirmBackToLobby()) return
-          trackEvent('online_back_to_lobby')
-          try {
-            await leaveOnlineSession(game)
-          } catch (error) {
-            console.warn('Leave match failed:', error)
-          }
-          clearOnlineSession()
-          setGame(null)
-        }}
-        onStartNewGame={async () => {
-          trackEvent('online_restart_requested')
-          try {
-            await restartOnlineSession(game)
-            setGame({ ...game, restartToken: Date.now() })
-            trackEvent('online_restart_success')
-          } catch (error) {
-            console.error('Restart match failed:', error)
-            trackEvent('online_restart_failed')
-            window.alert('重新開始失敗，請稍後再試。')
-          }
-        }}
-      />
+      <main>
+        <GameScreen
+          matchID={game.matchID}
+          playerID={game.playerID}
+          credentials={game.credentials}
+          isHost={game.isHost}
+          restartToken={game.restartToken || 0}
+          onBack={async () => {
+            if (!confirmBackToLobby()) return
+            trackEvent('online_back_to_lobby')
+            try {
+              await leaveOnlineSession(game)
+            } catch (error) {
+              console.warn('Leave match failed:', error)
+            }
+            clearOnlineSession()
+            setGame(null)
+          }}
+          onStartNewGame={async () => {
+            trackEvent('online_restart_requested')
+            try {
+              await restartOnlineSession(game)
+              setGame({ ...game, restartToken: Date.now() })
+              trackEvent('online_restart_success')
+            } catch (error) {
+              console.error('Restart match failed:', error)
+              trackEvent('online_restart_failed')
+              window.alert('重新開始失敗，請稍後再試。')
+            }
+          }}
+        />
+      </main>
     )
   }
 
@@ -938,14 +942,16 @@ export default function App() {
   })()
 
   return (
-    <Lobby
-      onCreate={startOnlineGame}
-      onJoin={joinOnlineGame}
-      onLocal={startLocalGame}
-      hasLocalGame={hasLocalGame}
-      onlineBusy={onlineBusy}
-      onlineAction={onlineAction}
-      onlineError={onlineError}
-    />
+    <main>
+      <Lobby
+        onCreate={startOnlineGame}
+        onJoin={joinOnlineGame}
+        onLocal={startLocalGame}
+        hasLocalGame={hasLocalGame}
+        onlineBusy={onlineBusy}
+        onlineAction={onlineAction}
+        onlineError={onlineError}
+      />
+    </main>
   )
 }
