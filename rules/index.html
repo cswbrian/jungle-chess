@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>鬥獸棋規則｜Jungle Chess 完整玩法</title>
+    <meta
+      name="description"
+      content="鬥獸棋規則完整整理：移動吃子、鼠吃象、跳河、陷阱與獸穴勝利條件，一頁快速看懂 Jungle Chess 玩法。"
+    />
+    <link rel="canonical" href="https://jungle.monsoonclub.co/rules/" />
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large" />
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "PingFang TC", "Noto Sans TC", system-ui, -apple-system, sans-serif;
+        color: #1f1c17;
+        background: #f3efe5;
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 1.2rem;
+        line-height: 1.65;
+      }
+      h1 { margin: 0 0 0.5rem; font-size: clamp(1.55rem, 4.8vw, 2rem); }
+      h2 { margin: 1.2rem 0 0.55rem; font-size: 1.2rem; }
+      p { margin: 0.3rem 0; }
+      ul { margin: 0.3rem 0 0; padding-left: 1.2rem; }
+      .card {
+        background: #fff;
+        border: 1px solid rgba(139, 115, 85, 0.25);
+        border-radius: 12px;
+        padding: 0.9rem;
+        margin-top: 0.85rem;
+      }
+      .faq-item + .faq-item { margin-top: 0.65rem; }
+      .faq-q { font-weight: 700; margin: 0; }
+      .faq-a { margin: 0.18rem 0 0; color: rgba(31, 28, 23, 0.85); }
+      .top-link {
+        display: inline-block;
+        margin-top: 1rem;
+        color: #1b5e20;
+        font-weight: 700;
+      }
+    </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "@id": "https://jungle.monsoonclub.co/rules/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "鬥獸棋怎麼玩？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "每回合移動一枚棋子，上下左右一格。一般是大吃小、同級互吃，先佔領對方獸穴就獲勝。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "鼠可以吃象嗎？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "可以。這是鬥獸棋的特殊規則：鼠能吃象，但象不能吃鼠。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "獅子和老虎可以跳河嗎？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "可以。獅與虎能直線跳過河，但若路徑上有鼠在水中，跳河會被阻擋。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "可以和朋友遠端連線對戰嗎？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "可以。開新局後分享代碼或連結，對手輸入後即可加入同一盤棋。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "手機可以玩鬥獸棋嗎？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "可以。此版本支援手機與電腦瀏覽器，無需下載即可開始遊玩。"
+            }
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <main>
+      <h1>鬥獸棋規則（Jungle Chess）</h1>
+      <p>這一頁整理鬥獸棋核心玩法，方便快速查找與分享。</p>
+
+      <section class="card">
+        <h2>基本規則</h2>
+        <ul>
+          <li>每回合移動一枚棋子，上下左右一格。</li>
+          <li>一般規則為大吃小，同級可互吃。</li>
+          <li>先佔領對方獸穴的一方獲勝。</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>特殊規則</h2>
+        <ul>
+          <li>鼠可吃象，象不能吃鼠。</li>
+          <li>獅子與老虎可跳河，但河中有鼠時不能跳。</li>
+          <li>敵方棋子進入我方陷阱後，會變得可被我方任意棋子吃掉。</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>常見問題 FAQ</h2>
+        <article class="faq-item">
+          <p class="faq-q">鬥獸棋怎麼玩？</p>
+          <p class="faq-a">每回合移動一枚棋子，上下左右一格。一般是大吃小、同級互吃，先佔領對方獸穴就獲勝。</p>
+        </article>
+        <article class="faq-item">
+          <p class="faq-q">鼠可以吃象嗎？</p>
+          <p class="faq-a">可以。這是鬥獸棋的特殊規則：鼠能吃象，但象不能吃鼠。</p>
+        </article>
+        <article class="faq-item">
+          <p class="faq-q">獅子和老虎可以跳河嗎？</p>
+          <p class="faq-a">可以。獅與虎能直線跳過河，但若路徑上有鼠在水中，跳河會被阻擋。</p>
+        </article>
+        <article class="faq-item">
+          <p class="faq-q">可以和朋友遠端連線對戰嗎？</p>
+          <p class="faq-a">可以。開新局後分享代碼或連結，對手輸入後即可加入同一盤棋。</p>
+        </article>
+      </section>
+
+      <a class="top-link" href="/">回到鬥獸棋首頁</a>
+    </main>
+  </body>
+</html>
